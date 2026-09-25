@@ -4,6 +4,7 @@ import json
 import statistics
 import requests
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 # ============================================================
 # CONFIGURAÇÃO
@@ -197,21 +198,20 @@ else:
 # HORÁRIOS
 # ============================================================
 
+manaus_tz = ZoneInfo("America/Manaus")
+
 if last_reading_timestamp is not None:
 
     last_reading_datetime = datetime.fromtimestamp(
         last_reading_timestamp,
-        tz=timezone.utc
-    ).strftime("%d/%m/%Y %H:%M UTC")
+        tz=manaus_tz
+    ).strftime("%d/%m/%Y %H:%M")
 
 else:
 
     last_reading_datetime = None
 
-
-update_datetime = datetime.now(
-    timezone.utc
-).strftime("%d/%m/%Y %H:%M UTC")
+update_datetime = datetime.now(manaus_tz).strftime("%d/%m/%Y %H:%M UTC")
 
 
 # ============================================================
