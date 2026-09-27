@@ -3,38 +3,48 @@ import time
 import json
 import statistics
 import requests
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+
+# ============================================================
+# Configuration
+# ============================================================
 
 API_KEY = os.environ["PURPLEAIR_API_KEY"]
 
 BASE_URL = "https://api.purpleair.com/v1"
 
 SENSORS = [
-    {"sensor_index": 31509, "name": "UEA-EST", "latitude": -3.091649, "longitude": -60.01759},
-    {"sensor_index": 315615, "name": "MIT_NAMA_UFAM", "latitude": -3.089241, "longitude": -59.964367},
-    {"sensor_index": 98395, "name": "FAS-Ar", "latitude": -3.074871, "longitude": -60.008675},
-    {"sensor_index": 161259, "name": "UEA_EDUCAIR_2", "latitude": -3.131549, "longitude": -60.00408},
-    {"sensor_index": 161261, "name": "UEA_EducAIR_1", "latitude": -3.130093, "longitude": -60.026802},
-    {"sensor_index": 161279, "name": "UEA_EducAIR_5", "latitude": -3.096909, "longitude": -59.969593},
-    {"sensor_index": 161291, "name": "UEA_EducAIR_6", "latitude": -3.128212, "longitude": -59.98678},
-#    {"sensor_index": 165047, "name": "UEA_EducAIR_14", "latitude": -3.073211, "longitude": -59.993156},
-    {"sensor_index": 165131, "name": "UEA_EducAIR_17", "latitude": -3.022957, "longitude": -60.05522},
-    {"sensor_index": 177605, "name": "UEA_EducAIR_26", "latitude": -3.079295, "longitude": -59.93338},
-    {"sensor_index": 181801, "name": "UEA_EducAIR_31", "latitude": -3.103645, "longitude": -60.04944},
-    {"sensor_index": 181825, "name": "UEA_EducAIR_32", "latitude": -3.112573, "longitude": -60.01188},
-    {"sensor_index": 205957, "name": "SEMA_MANAUS", "latitude": -3.08214, "longitude": -60.023293},
+    {"id": 31509, "name": "UEA-EST", "lat": -3.091649, "lon": -60.017590},
+    {"id": 315615, "name": "MIT_NAMA_UFAM", "lat": -3.089241, "lon": -59.964367},
+    {"id": 98395, "name": "FAS-Ar", "lat": -3.074871, "lon": -60.008675},
+    {"id": 161259, "name": "UEA_EDUCAIR_2", "lat": -3.131549, "lon": -60.004080},
+    {"id": 161261, "name": "UEA_EducAIR_1", "lat": -3.130093, "lon": -60.026802},
+    {"id": 161279, "name": "UEA_EducAIR_5", "lat": -3.096909, "lon": -59.969593},
+    {"id": 161291, "name": "UEA_EducAIR_6", "lat": -3.128212, "lon": -59.986780},
+    {"id": 165047, "name": "UEA_EducAIR_14", "lat": -3.073211, "lon": -59.993156},
+    {"id": 165131, "name": "UEA_EducAIR_17", "lat": -3.022957, "lon": -60.055220},
+    {"id": 177605, "name": "UEA_EducAIR_26", "lat": -3.079295, "lon": -59.933380},
+    {"id": 181801, "name": "UEA_EducAIR_31", "lat": -3.103645, "lon": -60.049440},
+    {"id": 181825, "name": "UEA_EducAIR_32", "lat": -3.112573, "lon": -60.011880},
+    {"id": 205957, "name": "SEMA_MANAUS", "lat": -3.082140, "lon": -60.023293},
 ]
 
 
-HEADERS = {
-    "X-API-Key": API_KEY
-}
-
+# ============================================================
+# PurpleAir API
+# ============================================================
 
 def get_sensor_data(sensor_index):
+    """Obtém as informações atuais do sensor."""
+
     url = f"{BASE_URL}/sensors/{sensor_index}"
+
+    headers = {
+        "X-API-Key": API_KEY
+    }
 
     params = {
         "fields": "sensor_index,name,last_seen"
@@ -42,7 +52,7 @@ def get_sensor_data(sensor_index):
 
     response = requests.get(
         url,
-        headers=HEADERS,
+        headers=headers,
         params=params,
         timeout=30
     )
@@ -53,7 +63,13 @@ def get_sensor_data(sensor_index):
 
 
 def get_sensor_history(sensor_index, start_timestamp, end_timestamp):
+    """Obtém o histórico horário de PM2.5 do sensor."""
+
     url = f"{BASE_URL}/sensors/{sensor_index}/history"
+
+    headers = {
+        "X-API-Key": API_KEY
+    }
 
     params = {
         "start_timestamp": start_timestamp,
@@ -64,7 +80,7 @@ def get_sensor_history(sensor_index, start_timestamp, end_timestamp):
 
     response = requests.get(
         url,
-        headers=HEADERS,
+        headers=headers,
         params=params,
         timeout=30
     )
@@ -74,122 +90,184 @@ def get_sensor_history(sensor_index, start_timestamp, end_timestamp):
     return response.json()
 
 
-# ---------------------------------------------------------
-# Período analisado:
-# sempre a última hora COMPLETA
-# ---------------------------------------------------------
+# ============================================================
+# Time interval
+# ============================================================
 
 now = int(time.time())
 
+# Início da hora atual
 current_hour = now - (now % 3600)
 
+# Última hora completa
 start_timestamp = current_hour - 3600
 end_timestamp = current_hour
 
 
-# ---------------------------------------------------------
-# Coleta dos sensores
-# ---------------------------------------------------------
+# ============================================================
+# Collect data
+# ============================================================
 
-sensors_data = []
 pm25_values = []
-
-number_online = 0
-
+sensor_results = []
 
 for sensor in SENSORS:
 
-    sensor_index = sensor["sensor_index"]
+    sensor_index = sensor["id"]
+    sensor_name = sensor["name"]
+
+    print(f"Consultando {sensor_name} ({sensor_index})...")
+
+    # --------------------------------------------------------
+    # 1. Consulta informações atuais do sensor
+    # --------------------------------------------------------
 
     try:
-        sensor_info = get_sensor_data(sensor_index)
 
-        last_seen = sensor_info.get("last_seen")
+        info = get_sensor_data(sensor_index)
 
-        online = (
-            last_seen is not None
-            and now - last_seen <= 3600
-        )
-
-        pm25 = None
-
-        if online:
-
-            history = get_sensor_history(
-                sensor_index,
-                start_timestamp,
-                end_timestamp
-            )
-
-            fields = history.get("fields", [])
-            data = history.get("data", [])
-
-            if data and "time_stamp" in fields and "pm2.5_atm" in fields:
-
-                time_index = fields.index("time_stamp")
-                pm_index = fields.index("pm2.5_atm")
-
-                # A API pode não retornar os registros ordenados.
-                data.sort(key=lambda row: row[time_index])
-
-                # Último valor dentro da hora analisada
-                last_row = data[-1]
-
-                pm25 = last_row[pm_index]
-
-                if pm25 is not None:
-                    pm25_values.append(float(pm25))
-
-            number_online += 1
-
-        sensors_data.append({
-            "sensor_index": sensor_index,
-            "name": sensor_info.get("name", sensor["name"]),
-            "latitude": sensor["latitude"],
-            "longitude": sensor["longitude"],
-            "online": online,
-            "pm2_5": pm25
-        })
-
-    except Exception as e:
+    except requests.RequestException as e:
 
         print(
-            f"Erro ao consultar sensor {sensor_index}: {e}"
+            f"  Erro ao consultar API para "
+            f"{sensor_name}: {e}"
         )
 
-        sensors_data.append({
-            "sensor_index": sensor_index,
-            "name": sensor["name"],
-            "latitude": sensor["latitude"],
-            "longitude": sensor["longitude"],
+        continue
+
+    # --------------------------------------------------------
+    # 2. Verifica se o sensor está online
+    # --------------------------------------------------------
+
+    last_seen = info["last_seen"]
+
+    online = (
+        last_seen is not None
+        and now - last_seen <= 3600
+    )
+
+    if not online:
+
+        print("  Sensor offline.")
+
+        sensor_results.append({
+            "id": sensor_index,
+            "name": sensor_name,
+            "lat": sensor["lat"],
+            "lon": sensor["lon"],
             "online": False,
             "pm2_5": None
         })
 
+        continue
 
-# ---------------------------------------------------------
-# Estatísticas
-# ---------------------------------------------------------
+    print("  Sensor online.")
+
+    # --------------------------------------------------------
+    # 3. Consulta histórico
+    # --------------------------------------------------------
+
+    try:
+
+        history = get_sensor_history(
+            sensor_index,
+            start_timestamp,
+            end_timestamp
+        )
+
+    except requests.RequestException as e:
+
+        print(
+            f"  Erro ao consultar histórico "
+            f"de {sensor_name}: {e}"
+        )
+
+        continue
+
+    # --------------------------------------------------------
+    # 4. Extrai os dados retornados pela API
+    # --------------------------------------------------------
+
+    fields = history["fields"]
+    data = history["data"]
+
+    timestamp_index = fields.index("time_stamp")
+    pm25_index = fields.index("pm2.5_atm")
+
+    # --------------------------------------------------------
+    # 5. Ordena os dados por timestamp
+    # --------------------------------------------------------
+
+    data.sort(
+        key=lambda row: row[timestamp_index]
+    )
+
+    # --------------------------------------------------------
+    # 6. Obtém o último valor disponível no intervalo
+    # --------------------------------------------------------
+
+    pm25 = None
+
+    for row in data:
+
+        value = row[pm25_index]
+
+        if value is not None:
+            pm25 = value
+
+    # --------------------------------------------------------
+    # 7. Armazena resultado do sensor
+    # --------------------------------------------------------
+
+    sensor_results.append({
+        "id": sensor_index,
+        "name": sensor_name,
+        "lat": sensor["lat"],
+        "lon": sensor["lon"],
+        "online": True,
+        "pm2_5": pm25
+    })
+
+    if pm25 is not None:
+
+        pm25_values.append(pm25)
+
+        print(
+            f"  PM2.5: {pm25:.1f} µg/m³"
+        )
+
+    else:
+
+        print(
+            "  Nenhum valor de PM2.5 disponível."
+        )
+
+
+# ============================================================
+# Statistics
+# ============================================================
 
 if pm25_values:
 
-    mean_pm25 = statistics.mean(pm25_values)
-
-    std_pm25 = (
-        statistics.pstdev(pm25_values)
-        if len(pm25_values) > 1
-        else 0
-    )
+    pm25_mean = statistics.mean(pm25_values)
+    pm25_std = statistics.pstdev(pm25_values)
 
 else:
 
-    mean_pm25 = None
-    std_pm25 = None
+    pm25_mean = None
+    pm25_std = None
 
 
-# ---------------------------------------------------------
-# Horários em Manaus
-# ---------------------------------------------------------
+number_online = sum(
+    1
+    for sensor in sensor_results
+    if sensor["online"]
+)
+
+
+# ============================================================
+# Manaus timezone
+# ============================================================
 
 manaus_tz = ZoneInfo("America/Manaus")
 
@@ -208,59 +286,58 @@ updated_at = datetime.now(
 ).strftime("%d/%m/%Y %H:%M")
 
 
-# ---------------------------------------------------------
-# Resultado
-# ---------------------------------------------------------
+# ============================================================
+# Output
+# ============================================================
 
-output = {
+result = {
     "updated_at": updated_at,
     "period_start": period_start,
     "period_end": period_end,
+
     "number_of_sensors": len(SENSORS),
     "number_online": number_online,
-    "pm2_5_mean": mean_pm25,
-    "pm2_5_std": std_pm25,
-    "sensors": sensors_data
+
+    "pm2_5_mean": (
+        round(pm25_mean, 2)
+        if pm25_mean is not None
+        else None
+    ),
+
+    "pm2_5_std": (
+        round(pm25_std, 2)
+        if pm25_std is not None
+        else None
+    ),
+
+    "sensors": sensor_results
 }
 
 
-# ---------------------------------------------------------
-# Salva JSON
-# ---------------------------------------------------------
+# ============================================================
+# Save JSON
+# ============================================================
 
 with open("data.json", "w", encoding="utf-8") as f:
 
     json.dump(
-        output,
+        result,
         f,
         ensure_ascii=False,
         indent=2
     )
 
 
-print("Dados atualizados com sucesso.")
+# ============================================================
+# Summary
+# ============================================================
 
-print(
-    f"Período analisado: "
-    f"{period_start} - {period_end}"
-)
-
-print(
-    f"Dashboard atualizado: "
-    f"{updated_at}"
-)
-
-print(
-    f"Sensores online: "
-    f"{number_online}/{len(SENSORS)}"
-)
-
-print(
-    f"PM2.5 médio: "
-    f"{mean_pm25}"
-)
-
-print(
-    f"Desvio padrão: "
-    f"{std_pm25}"
-)
+print()
+print("========================================")
+print("Coleta concluída")
+print("========================================")
+print(f"Período: {period_start} - {period_end}")
+print(f"Sensores online: {number_online}/{len(SENSORS)}")
+print(f"PM2.5 médio: {pm25_mean}")
+print(f"PM2.5 desvio padrão: {pm25_std}")
+print("========================================")
