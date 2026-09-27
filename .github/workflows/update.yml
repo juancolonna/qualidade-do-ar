@@ -6,7 +6,7 @@ on:
 
     # Executa aproximadamente 5 minutos depois
     # de cada hora.
-    - cron: "5 * * * *"
+    - cron: "15 * * * *"
       timezone: "America/Manaus"
 
   # Permite executar manualmente pelo GitHub
