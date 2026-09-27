@@ -64,7 +64,7 @@ def get_sensor_history(sensor_index, start_timestamp, end_timestamp):
         "start_timestamp": start_timestamp,
         "end_timestamp": end_timestamp,
         "average": 60,
-        "fields": "pm2.5_atm"
+        "fields": "pm2.5_atm_a"
     }
 
     response = requests.get(
