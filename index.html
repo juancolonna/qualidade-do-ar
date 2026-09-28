@@ -120,10 +120,10 @@
 
 
         <div class="card">
-            <h3>Desvio padrão</h3>
+            <h3>IC 95%</h3>
 
             <div class="value">
-                <span id="std">--</span> µg/m³
+                <span id="ci95">--</span> µg/m³
             </div>
         </div>
     </div>
@@ -207,9 +207,12 @@
                         : "--";
 
 
-                document.getElementById("std").textContent =
-                    data.pm2_5_std !== null
-                        ? Number(data.pm2_5_std).toFixed(1)
+                document.getElementById("ci95").textContent =
+                    data.pm2_5_ci95_lower !== null &&
+                    data.pm2_5_ci95_upper !== null
+                        ? Number(data.pm2_5_ci95_lower).toFixed(1) +
+                          " – " +
+                          Number(data.pm2_5_ci95_upper).toFixed(1)
                         : "--";
 
 

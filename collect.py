@@ -247,22 +247,53 @@ for sensor in SENSORS:
 # Statistics
 # ============================================================
 
-if pm25_values:
-
-    pm25_mean = statistics.mean(pm25_values)
-    pm25_std = statistics.pstdev(pm25_values)
-
-else:
-
-    pm25_mean = None
-    pm25_std = None
-
-
 number_online = sum(
     1
     for sensor in sensor_results
     if sensor["online"]
 )
+
+if pm25_values:
+
+    pm25_mean = statistics.mean(pm25_values)
+
+else:
+
+    pm25_mean = None
+
+
+# Critical values of the two-sided t-Student distribution
+# for a 95% confidence interval, with the available sample
+# sizes (n = 1 to 12 sensors).
+T_CRITICAL_95 = {
+    1: None,
+    2: 12.706,
+    3: 4.303,
+    4: 3.182,
+    5: 2.776,
+    6: 2.571,
+    7: 2.447,
+    8: 2.365,
+    9: 2.306,
+    10: 2.262,
+    11: 2.228,
+    12: 2.201,
+}
+
+if pm25_mean is not None and number_online >= 2:
+
+    pm25_std = statistics.stdev(pm25_values)
+    t_critical = T_CRITICAL_95[number_online]
+    standard_error = pm25_std / (number_online ** 0.5)
+    margin_of_error = t_critical * standard_error
+
+    pm25_ci95_lower = pm25_mean - margin_of_error
+    pm25_ci95_upper = pm25_mean + margin_of_error
+
+else:
+
+    pm25_ci95_lower = None
+    pm25_ci95_upper = None
 
 
 # ============================================================
@@ -304,9 +335,15 @@ result = {
         else None
     ),
 
-    "pm2_5_std": (
-        round(pm25_std, 2)
-        if pm25_std is not None
+    "pm2_5_ci95_lower": (
+        round(pm25_ci95_lower, 2)
+        if pm25_ci95_lower is not None
+        else None
+    ),
+
+    "pm2_5_ci95_upper": (
+        round(pm25_ci95_upper, 2)
+        if pm25_ci95_upper is not None
         else None
     ),
 
@@ -339,5 +376,5 @@ print("========================================")
 print(f"Período: {period_start} - {period_end}")
 print(f"Sensores online: {number_online}/{len(SENSORS)}")
 print(f"PM2.5 médio: {pm25_mean}")
-print(f"PM2.5 desvio padrão: {pm25_std}")
+print(f"IC 95%: {pm25_ci95_lower} - {pm25_ci95_upper}")
 print("========================================")
