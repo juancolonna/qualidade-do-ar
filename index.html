@@ -126,25 +126,6 @@
                 <span id="std">--</span> µg/m³
             </div>
         </div>
-
-
-        <div class="card">
-            <h3>Sensores online</h3>
-
-            <div class="value">
-                <span id="online">--</span>
-            </div>
-        </div>
-
-
-        <div class="card">
-            <h3>Total de sensores</h3>
-
-            <div class="value">
-                <span id="total">--</span>
-            </div>
-        </div>
-
     </div>
 
 
@@ -230,14 +211,6 @@
                     data.pm2_5_std !== null
                         ? Number(data.pm2_5_std).toFixed(1)
                         : "--";
-
-
-                document.getElementById("online").textContent =
-                    data.number_online;
-
-
-                document.getElementById("total").textContent =
-                    data.number_of_sensors;
 
 
                 /*
