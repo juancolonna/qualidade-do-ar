@@ -117,16 +117,7 @@
     <div class="cards">
 
         <div class="card" id="mean-card">
-            <h3>PM2.5 médio</h3>
-
-            <div class="value">
-                <span id="mean">--</span> µg/m³
-            </div>
-        </div>
-
-
-        <div class="card">
-            <h3>IC 95%</h3>
+            <h3>PM2.5 médio (IC 95%)</h3>
 
             <div class="value">
                 <span id="ci95">--</span> µg/m³
@@ -241,9 +232,12 @@
 
                 document.getElementById("ci95").textContent =
                     data.pm2_5_ci95_lower !== null &&
+                    data.pm2_5_mean !== null &&
                     data.pm2_5_ci95_upper !== null
                         ? Number(data.pm2_5_ci95_lower).toFixed(1) +
-                          " – " +
+                          " ≤ " +
+                          Number(data.pm2_5_mean).toFixed(1) +
+                          " ≤ " +
                           Number(data.pm2_5_ci95_upper).toFixed(1)
                         : "--";
 
