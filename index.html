@@ -51,6 +51,31 @@
         .pm25-red { background: #ff0000; }
         .pm25-violet { background: #8b00ff; }
 
+        .ci-value { font-weight: normal; }
+        .mean-value { font-weight: bold; }
+
+        .legend {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-color {
+            width: 9px;
+            height: 9px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
         .card h3 {
             margin-top: 0;
             font-size: 15px;
@@ -121,6 +146,14 @@
 
             <div class="value">
                 <span id="ci95">--</span> µg/m³
+            </div>
+
+            <div class="legend">
+                <span class="legend-item"><span class="legend-color pm25-green"></span>0–25 bom</span>
+                <span class="legend-item"><span class="legend-color pm25-yellow"></span>25–50 moderado</span>
+                <span class="legend-item"><span class="legend-color pm25-orange"></span>50–75 ruim</span>
+                <span class="legend-item"><span class="legend-color pm25-red"></span>75–125 muito ruim</span>
+                <span class="legend-item"><span class="legend-color pm25-violet"></span>&gt;125 péssimo</span>
             </div>
         </div>
     </div>
@@ -224,15 +257,13 @@
                 }
 
 
-                document.getElementById("ci95").textContent =
+                document.getElementById("ci95").innerHTML =
                     data.pm2_5_ci95_lower !== null &&
                     data.pm2_5_mean !== null &&
                     data.pm2_5_ci95_upper !== null
-                        ? Number(data.pm2_5_ci95_lower).toFixed(1) +
-                          " ≤ " +
-                          Number(data.pm2_5_mean).toFixed(1) +
-                          " ≤ " +
-                          Number(data.pm2_5_ci95_upper).toFixed(1)
+                        ? '<span class="ci-value">' + Number(data.pm2_5_ci95_lower).toFixed(1) +
+                          ' ≤ </span><span class="mean-value">' + Number(data.pm2_5_mean).toFixed(1) +
+                          '</span><span class="ci-value"> ≤ ' + Number(data.pm2_5_ci95_upper).toFixed(1) + '</span>'
                         : "--";
 
 
