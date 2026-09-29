@@ -45,6 +45,12 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
+        .pm25-green { background: #90ee90; }
+        .pm25-yellow { background: #ffff00; }
+        .pm25-orange { background: #ffa500; }
+        .pm25-red { background: #ff0000; }
+        .pm25-violet { background: #8b00ff; }
+
         .card h3 {
             margin-top: 0;
             font-size: 15px;
@@ -110,7 +116,7 @@
 
     <div class="cards">
 
-        <div class="card">
+        <div class="card" id="mean-card">
             <h3>PM2.5 médio</h3>
 
             <div class="value">
@@ -205,6 +211,32 @@
                     data.pm2_5_mean !== null
                         ? Number(data.pm2_5_mean).toFixed(1)
                         : "--";
+
+
+                const meanCard = document.getElementById("mean-card");
+                const mean = Number(data.pm2_5_mean);
+
+                meanCard.classList.remove(
+                    "pm25-green",
+                    "pm25-yellow",
+                    "pm25-orange",
+                    "pm25-red",
+                    "pm25-violet"
+                );
+
+                if (!isNaN(mean)) {
+                    if (mean < 25) {
+                        meanCard.classList.add("pm25-green");
+                    } else if (mean < 50) {
+                        meanCard.classList.add("pm25-yellow");
+                    } else if (mean < 75) {
+                        meanCard.classList.add("pm25-orange");
+                    } else if (mean < 125) {
+                        meanCard.classList.add("pm25-red");
+                    } else {
+                        meanCard.classList.add("pm25-violet");
+                    }
+                }
 
 
                 document.getElementById("ci95").textContent =
