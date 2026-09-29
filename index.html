@@ -198,12 +198,6 @@
                  * Estatísticas
                  */
 
-                document.getElementById("mean").textContent =
-                    data.pm2_5_mean !== null
-                        ? Number(data.pm2_5_mean).toFixed(1)
-                        : "--";
-
-
                 const meanCard = document.getElementById("mean-card");
                 const mean = Number(data.pm2_5_mean);
 
