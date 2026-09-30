@@ -7,6 +7,12 @@
 
     <title>Qualidade do Ar - Manaus</title>
 
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        crossorigin=""
+    >
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -75,6 +81,24 @@
             height: 9px;
             border-radius: 2px;
             display: inline-block;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-popup {
+            line-height: 1.5;
+        }
+
+        .map-marker {
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
         }
 
         .card h3 {
@@ -160,6 +184,11 @@
     </div>
 
 
+    <h2>Mapa dos sensores</h2>
+
+    <div id="map"></div>
+
+
     <h2>Sensores</h2>
 
 
@@ -183,7 +212,25 @@
     </table>
 
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
+
+        const map = L.map("map").setView([-3.10, -60.02], 12);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        function getPM25Color(pm25) {
+            if (pm25 === null || isNaN(pm25)) return "#808080";
+            if (pm25 < 25) return "#008000";
+            if (pm25 < 50) return "#ffff00";
+            if (pm25 < 75) return "#ffa500";
+            if (pm25 < 125) return "#ff0000";
+            return "#8b00ff";
+        }
 
         async function loadData() {
 
@@ -266,6 +313,50 @@
                           ' ≤ </span><span class="mean-value">' + Number(data.pm2_5_mean).toFixed(1) +
                           '</span><span class="ci-value"> ≤ ' + Number(data.pm2_5_ci95_upper).toFixed(1) + '</span>'
                         : "--";
+
+
+                /*
+                 * Mapa dos sensores
+                 */
+
+                const sensorPoints = [];
+
+                data.sensors.forEach(sensor => {
+                    if (sensor.lat === null || sensor.lon === null) return;
+
+                    const lat = Number(sensor.lat);
+                    const lon = Number(sensor.lon);
+                    if (isNaN(lat) || isNaN(lon)) return;
+
+                    sensorPoints.push([lat, lon]);
+
+                    const pm25 = sensor.pm2_5 !== null
+                        ? Number(sensor.pm2_5)
+                        : null;
+
+                    const marker = L.circleMarker([lat, lon], {
+                        radius: 9,
+                        color: "white",
+                        weight: 2,
+                        fillColor: getPM25Color(pm25),
+                        fillOpacity: 0.9
+                    }).addTo(map);
+
+                    const value = pm25 !== null && !isNaN(pm25)
+                        ? pm25.toFixed(1) + " µg/m³"
+                        : "--";
+
+                    marker.bindPopup(
+                        '<div class="map-popup"><strong>' + sensor.name +
+                        '</strong><br>PM2.5: ' + value +
+                        '<br>Status: ' + (sensor.online ? "Online" : "Offline") +
+                        '</div>'
+                    );
+                });
+
+                if (sensorPoints.length > 0) {
+                    map.fitBounds(sensorPoints, { padding: [30, 30] });
+                }
 
 
                 /*
