@@ -75,7 +75,7 @@ def get_sensor_history(sensor_index, start_timestamp, end_timestamp):
         "start_timestamp": start_timestamp,
         "end_timestamp": end_timestamp,
         "average": 60,
-        "fields": "pm2.5_atm"
+        "fields": "pm2.5_cf_1,humidity"
     }
 
     response = requests.get(
@@ -192,7 +192,8 @@ for sensor in SENSORS:
     data = history["data"]
 
     timestamp_index = fields.index("time_stamp")
-    pm25_index = fields.index("pm2.5_atm")
+    pm25_index = fields.index("pm2.5_cf_1")
+    humidity_index = fields.index("humidity")
 
     # --------------------------------------------------------
     # 5. Ordena os dados por timestamp
@@ -211,9 +212,36 @@ for sensor in SENSORS:
     for row in data:
 
         value = row[pm25_index]
+        humidity = row[humidity_index]
 
-        if value is not None:
-            pm25 = value
+        if value is not None and humidity is not None:
+            if value < 570:
+                pm25 = (
+                    0.524 * value
+                    - 0.0862 * humidity
+                    + 5.75
+                )
+
+            elif value < 611:
+                y1 = (
+                    0.524 * value
+                    - 0.0862 * humidity
+                    + 5.75
+                )
+                y3 = (
+                    4.21e-4 * value**2
+                    + 0.392 * value
+                    + 3.44
+                )
+                weight = 0.0244 * value - 13.9
+                pm25 = (1 - weight) * y1 + weight * y3
+
+            else:
+                pm25 = (
+                    4.21e-4 * value**2
+                    + 0.392 * value
+                    + 3.44
+                )
 
     # --------------------------------------------------------
     # 7. Armazena resultado do sensor
