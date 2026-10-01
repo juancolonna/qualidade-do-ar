@@ -51,11 +51,19 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .pm25-green { background: #90ee90; }
+        .pm25-green { background: #00e400; }
         .pm25-yellow { background: #ffff00; }
-        .pm25-orange { background: #ffa500; }
+        .pm25-orange { background: #ff7e00; }
         .pm25-red { background: #ff0000; }
-        .pm25-violet { background: #8b00ff; }
+        .pm25-violet { background: #8f3f97; }
+        .pm25-maroon { background: #7e0023; }
+
+        .aqi-green { background: #00e400; }
+        .aqi-yellow { background: #ffff00; }
+        .aqi-orange { background: #ff7e00; }
+        .aqi-red { background: #ff0000; }
+        .aqi-violet { background: #8f3f97; }
+        .aqi-maroon { background: #7e0023; }
 
         .ci-value { font-weight: normal; }
         .mean-value { font-weight: bold; }
@@ -174,11 +182,31 @@
             </div>
 
             <div class="legend">
-                <span class="legend-item"><span class="legend-color pm25-green"></span>0–25 bom</span>
-                <span class="legend-item"><span class="legend-color pm25-yellow"></span>25–50 moderado</span>
-                <span class="legend-item"><span class="legend-color pm25-orange"></span>50–75 ruim</span>
-                <span class="legend-item"><span class="legend-color pm25-red"></span>75–125 muito ruim</span>
-                <span class="legend-item"><span class="legend-color pm25-violet"></span>&gt;125 péssimo</span>
+                <span class="legend-item"><span class="legend-color pm25-green"></span>0–9 bom</span>
+                <span class="legend-item"><span class="legend-color pm25-yellow"></span>9–35,5 moderado</span>
+                <span class="legend-item"><span class="legend-color pm25-orange"></span>35,5–55,5 insalubre para grupos sensíveis</span>
+                <span class="legend-item"><span class="legend-color pm25-red"></span>55,5–125,5 insalubre</span>
+                <span class="legend-item"><span class="legend-color pm25-violet"></span>125,5–225,5 muito insalubre</span>
+                <span class="legend-item"><span class="legend-color pm25-maroon"></span>225,5–325,5 perigoso</span>
+            </div>
+        </div>
+
+        <div class="card" id="aqi-card">
+            <h3>US AQI — PM2.5 (24 horas)</h3>
+
+            <div class="value">
+                <span id="us-aqi">--</span>
+            </div>
+
+            <div id="aqi-category" class="unit">--</div>
+
+            <div class="legend">
+                <span class="legend-item"><span class="legend-color aqi-green"></span>0–50 bom</span>
+                <span class="legend-item"><span class="legend-color aqi-yellow"></span>51–100 moderado</span>
+                <span class="legend-item"><span class="legend-color aqi-orange"></span>101–150 insalubre para grupos sensíveis</span>
+                <span class="legend-item"><span class="legend-color aqi-red"></span>151–200 insalubre</span>
+                <span class="legend-item"><span class="legend-color aqi-violet"></span>201–300 muito insalubre</span>
+                <span class="legend-item"><span class="legend-color aqi-maroon"></span>301–500 perigoso</span>
             </div>
         </div>
     </div>
@@ -225,11 +253,12 @@
 
         function getPM25Color(pm25) {
             if (pm25 === null || isNaN(pm25)) return "#808080";
-            if (pm25 < 25) return "#008000";
-            if (pm25 < 50) return "#ffff00";
-            if (pm25 < 75) return "#ffa500";
-            if (pm25 < 125) return "#ff0000";
-            return "#8b00ff";
+            if (pm25 <= 9.0) return "#00e400";
+            if (pm25 <= 35.4) return "#ffff00";
+            if (pm25 <= 55.4) return "#ff7e00";
+            if (pm25 <= 125.4) return "#ff0000";
+            if (pm25 <= 225.4) return "#8f3f97";
+            return "#7e0023";
         }
 
         async function loadData() {
@@ -287,20 +316,23 @@
                     "pm25-yellow",
                     "pm25-orange",
                     "pm25-red",
-                    "pm25-violet"
+                    "pm25-violet",
+                    "pm25-maroon"
                 );
 
                 if (!isNaN(mean)) {
-                    if (mean < 25) {
+                    if (mean <= 9.0) {
                         meanCard.classList.add("pm25-green");
-                    } else if (mean < 50) {
+                    } else if (mean <= 35.4) {
                         meanCard.classList.add("pm25-yellow");
-                    } else if (mean < 75) {
+                    } else if (mean <= 55.4) {
                         meanCard.classList.add("pm25-orange");
-                    } else if (mean < 125) {
+                    } else if (mean <= 125.4) {
                         meanCard.classList.add("pm25-red");
-                    } else {
+                    } else if (mean <= 225.4) {
                         meanCard.classList.add("pm25-violet");
+                    } else {
+                        meanCard.classList.add("pm25-maroon");
                     }
                 }
 
@@ -313,6 +345,46 @@
                           ' ≤ </span><span class="mean-value">' + Number(data.pm2_5_mean).toFixed(1) +
                           '</span><span class="ci-value"> ≤ ' + Number(data.pm2_5_ci95_upper).toFixed(1) + '</span>'
                         : "--";
+
+
+                /*
+                 * US AQI baseado na média de PM2.5 das últimas 24 horas
+                 */
+
+                const aqiCard = document.getElementById("aqi-card");
+                const aqi = Number(data.us_aqi);
+                const aqiCategory = data.us_aqi_category || "--";
+
+                aqiCard.classList.remove(
+                    "aqi-green",
+                    "aqi-yellow",
+                    "aqi-orange",
+                    "aqi-red",
+                    "aqi-violet",
+                    "aqi-maroon"
+                );
+
+                if (!isNaN(aqi)) {
+                    if (aqi <= 50) {
+                        aqiCard.classList.add("aqi-green");
+                    } else if (aqi <= 100) {
+                        aqiCard.classList.add("aqi-yellow");
+                    } else if (aqi <= 150) {
+                        aqiCard.classList.add("aqi-orange");
+                    } else if (aqi <= 200) {
+                        aqiCard.classList.add("aqi-red");
+                    } else if (aqi <= 300) {
+                        aqiCard.classList.add("aqi-violet");
+                    } else {
+                        aqiCard.classList.add("aqi-maroon");
+                    }
+                }
+
+                document.getElementById("us-aqi").textContent =
+                    !isNaN(aqi) ? Math.round(aqi) : "--";
+
+                document.getElementById("aqi-category").textContent =
+                    aqiCategory;
 
 
                 /*

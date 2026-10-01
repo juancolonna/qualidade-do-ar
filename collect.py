@@ -62,8 +62,10 @@ def get_sensor_data(sensor_index):
     return response.json()["sensor"]
 
 
-def get_sensor_history(sensor_index, start_timestamp, end_timestamp):
-    """Obtém o histórico horário de PM2.5 do sensor."""
+def get_sensor_history(sensor_index, end_timestamp, average):
+    """Obtém o histórico de PM2.5 do sensor."""
+
+    start_timestamp = end_timestamp - (average * 60)
 
     url = f"{BASE_URL}/sensors/{sensor_index}/history"
 
@@ -74,7 +76,7 @@ def get_sensor_history(sensor_index, start_timestamp, end_timestamp):
     params = {
         "start_timestamp": start_timestamp,
         "end_timestamp": end_timestamp,
-        "average": 60,
+        "average": average,
         "fields": "pm2.5_cf_1,humidity"
     }
 
@@ -109,6 +111,7 @@ end_timestamp = current_hour
 # ============================================================
 
 pm25_values = []
+pm25_24h_values = []
 sensor_results = []
 
 for sensor in SENSORS:
@@ -156,7 +159,8 @@ for sensor in SENSORS:
             "lat": sensor["lat"],
             "lon": sensor["lon"],
             "online": False,
-            "pm2_5": None
+            "pm2_5": None,
+            "pm2_5_24h": None
         })
 
         continue
@@ -169,10 +173,18 @@ for sensor in SENSORS:
 
     try:
 
-        history = get_sensor_history(
+        # Última hora completa
+        history_1h = get_sensor_history(
             sensor_index,
-            start_timestamp,
-            end_timestamp
+            end_timestamp,
+            60
+        )
+
+        # Últimas 24 horas completas
+        history_24h = get_sensor_history(
+            sensor_index,
+            end_timestamp,
+            1440
         )
 
     except requests.RequestException as e:
@@ -188,60 +200,69 @@ for sensor in SENSORS:
     # 4. Extrai os dados retornados pela API
     # --------------------------------------------------------
 
-    fields = history["fields"]
-    data = history["data"]
+    def corrected_pm25(history):
 
-    timestamp_index = fields.index("time_stamp")
-    pm25_index = fields.index("pm2.5_cf_1")
-    humidity_index = fields.index("humidity")
+        fields = history["fields"]
+        data = history["data"]
+
+        timestamp_index = fields.index("time_stamp")
+        pm25_index = fields.index("pm2.5_cf_1")
+        humidity_index = fields.index("humidity")
+
+        data.sort(
+            key=lambda row: row[timestamp_index]
+        )
+
+        pm25 = None
+
+        for row in data:
+
+            value = row[pm25_index]
+            humidity = row[humidity_index]
+
+            if value is not None and humidity is not None:
+
+                if value < 570:
+                    pm25 = (
+                        0.524 * value
+                        - 0.0862 * humidity
+                        + 5.75
+                    )
+
+                elif value < 611:
+
+                    y1 = (
+                        0.524 * value
+                        - 0.0862 * humidity
+                        + 5.75
+                    )
+
+                    y3 = (
+                        4.21e-4 * value**2
+                        + 0.392 * value
+                        + 3.44
+                    )
+
+                    weight = 0.0244 * value - 13.9
+
+                    pm25 = (1 - weight) * y1 + weight * y3
+
+                else:
+
+                    pm25 = (
+                        4.21e-4 * value**2
+                        + 0.392 * value
+                        + 3.44
+                    )
+
+        return pm25
 
     # --------------------------------------------------------
-    # 5. Ordena os dados por timestamp
+    # 5. Calcula PM2.5 corrigido para cada período
     # --------------------------------------------------------
 
-    data.sort(
-        key=lambda row: row[timestamp_index]
-    )
-
-    # --------------------------------------------------------
-    # 6. Obtém o último valor disponível no intervalo
-    # --------------------------------------------------------
-
-    pm25 = None
-
-    for row in data:
-
-        value = row[pm25_index]
-        humidity = row[humidity_index]
-
-        if value is not None and humidity is not None:
-            if value < 570:
-                pm25 = (
-                    0.524 * value
-                    - 0.0862 * humidity
-                    + 5.75
-                )
-
-            elif value < 611:
-                y1 = (
-                    0.524 * value
-                    - 0.0862 * humidity
-                    + 5.75
-                )
-                y3 = (
-                    4.21e-4 * value**2
-                    + 0.392 * value
-                    + 3.44
-                )
-                weight = 0.0244 * value - 13.9
-                pm25 = (1 - weight) * y1 + weight * y3
-
-            else:
-                pm25 = (
-                    4.21e-4 * value**2
-                    + 0.392 * value
-                    + 3.44
-                )
+    pm25 = corrected_pm25(history_1h)
+    pm25_24h = corrected_pm25(history_24h)
 
     # --------------------------------------------------------
     # 7. Armazena resultado do sensor
@@ -253,15 +274,26 @@ for sensor in SENSORS:
         "lat": sensor["lat"],
         "lon": sensor["lon"],
         "online": True,
-        "pm2_5": pm25
+        "pm2_5": pm25,
+        "pm2_5_24h": pm25_24h
     })
 
     if pm25 is not None:
 
         pm25_values.append(pm25)
 
+    if pm25_24h is not None:
+
+        pm25_24h_values.append(pm25_24h)
+
         print(
-            f"  PM2.5: {pm25:.1f} µg/m³"
+            f"  PM2.5 (1h): {pm25:.1f} µg/m³"
+        )
+
+    if pm25_24h is not None:
+
+        print(
+            f"  PM2.5 (24h): {pm25_24h:.1f} µg/m³"
         )
 
     else:
@@ -288,6 +320,62 @@ if pm25_values:
 else:
 
     pm25_mean = None
+
+if pm25_24h_values:
+
+    pm25_24h_mean = statistics.mean(pm25_24h_values)
+
+else:
+
+    pm25_24h_mean = None
+
+
+# ============================================================
+# US AQI - PM2.5
+# ============================================================
+
+def calculate_us_aqi(pm25_24h):
+    """Calcula o US AQI para PM2.5 usando a média de 24 horas."""
+
+    if pm25_24h is None:
+        return None, None
+
+    # EPA: concentração truncada para uma casa decimal.
+    concentration = int(pm25_24h * 10) / 10
+
+    breakpoints = [
+        (0.0, 9.0, 0, 50, "Bom"),
+        (9.1, 35.4, 51, 100, "Moderado"),
+        (35.5, 55.4, 101, 150, "Insalubre para grupos sensíveis"),
+        (55.5, 125.4, 151, 200, "Insalubre"),
+        (125.5, 225.4, 201, 300, "Muito insalubre"),
+        (225.5, 325.4, 301, 500, "Perigoso"),
+    ]
+
+    for bp_lo, bp_hi, i_lo, i_hi, category in breakpoints:
+
+        if concentration <= bp_hi:
+            aqi = (
+                (i_hi - i_lo)
+                / (bp_hi - bp_lo)
+                * (concentration - bp_lo)
+                + i_lo
+            )
+
+            return round(aqi), category
+
+    # Acima de 325.4 µg/m³ permanece na categoria Perigoso.
+    aqi = (
+        (500 - 301)
+        / (325.4 - 225.5)
+        * (concentration - 225.5)
+        + 301
+    )
+
+    return round(aqi), "Perigoso"
+
+
+us_aqi, us_aqi_category = calculate_us_aqi(pm25_24h_mean)
 
 
 # Critical values of the two-sided t-Student distribution
@@ -375,6 +463,15 @@ result = {
         else None
     ),
 
+    "pm2_5_24h_mean": (
+        round(pm25_24h_mean, 2)
+        if pm25_24h_mean is not None
+        else None
+    ),
+
+    "us_aqi": us_aqi,
+    "us_aqi_category": us_aqi_category,
+
     "sensors": sensor_results
 }
 
@@ -403,6 +500,8 @@ print("Coleta concluída")
 print("========================================")
 print(f"Período: {period_start} - {period_end}")
 print(f"Sensores online: {number_online}/{len(SENSORS)}")
-print(f"PM2.5 médio: {pm25_mean}")
+print(f"PM2.5 médio (1h): {pm25_mean}")
 print(f"IC 95%: {pm25_ci95_lower} - {pm25_ci95_upper}")
+print(f"PM2.5 médio (24h): {pm25_24h_mean}")
+print(f"US AQI: {us_aqi} - {us_aqi_category}")
 print("========================================")
