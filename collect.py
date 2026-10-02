@@ -54,7 +54,7 @@ def get_sensor_data(sensor_index):
         url,
         headers=headers,
         params=params,
-        timeout=30
+        timeout=90
     )
 
     response.raise_for_status()
@@ -84,7 +84,7 @@ def get_sensor_history(sensor_index, end_timestamp, average):
         url,
         headers=headers,
         params=params,
-        timeout=30
+        timeout=90
     )
 
     response.raise_for_status()
@@ -168,7 +168,7 @@ for sensor in SENSORS:
     print("  Sensor online.")
 
     # --------------------------------------------------------
-    # 3. Consulta histórico
+    # 3. Consulta histórico de uma hora
     # --------------------------------------------------------
 
     try:
@@ -180,6 +180,21 @@ for sensor in SENSORS:
             60
         )
 
+    except requests.RequestException as e:
+
+        print(
+            f"  Erro ao consultar histórico de 60 minutos"
+            f"de {sensor_name}: {e}"
+        )
+
+        continue
+
+    # --------------------------------------------------------
+    # 4. Consulta histórico de uma hora de 24 horas
+    # --------------------------------------------------------
+
+    try:
+
         # Últimas 24 horas completas
         history_24h = get_sensor_history(
             sensor_index,
@@ -190,14 +205,14 @@ for sensor in SENSORS:
     except requests.RequestException as e:
 
         print(
-            f"  Erro ao consultar histórico "
+            f"  Erro ao consultar histórico de 24 horas"
             f"de {sensor_name}: {e}"
         )
 
         continue
 
     # --------------------------------------------------------
-    # 4. Extrai os dados retornados pela API
+    # 5. Extrai os dados retornados pela API
     # --------------------------------------------------------
 
     def corrected_pm25(history):
@@ -258,14 +273,14 @@ for sensor in SENSORS:
         return pm25
 
     # --------------------------------------------------------
-    # 5. Calcula PM2.5 corrigido para cada período
+    # 6. Calcula PM2.5 corrigido para cada período
     # --------------------------------------------------------
 
     pm25 = corrected_pm25(history_1h)
     pm25_24h = corrected_pm25(history_24h)
 
     # --------------------------------------------------------
-    # 7. Armazena resultado do sensor
+    # 8. Armazena resultado do sensor
     # --------------------------------------------------------
 
     sensor_results.append({
@@ -304,7 +319,7 @@ for sensor in SENSORS:
 
 
 # ============================================================
-# Statistics
+# 9. Statistics
 # ============================================================
 
 number_online = sum(
@@ -331,7 +346,7 @@ else:
 
 
 # ============================================================
-# US AQI - PM2.5
+# 10. US AQI - PM2.5
 # ============================================================
 
 def calculate_us_aqi(pm25_24h):
@@ -377,6 +392,9 @@ def calculate_us_aqi(pm25_24h):
 
 us_aqi, us_aqi_category = calculate_us_aqi(pm25_24h_mean)
 
+# ============================================================
+# 11. Intervalo de confiança
+# ============================================================
 
 # Critical values of the two-sided t-Student distribution
 # for a 95% confidence interval, with the available sample
@@ -413,7 +431,7 @@ else:
 
 
 # ============================================================
-# Manaus timezone
+# 12. Manaus timezone
 # ============================================================
 
 manaus_tz = ZoneInfo("America/Manaus")
@@ -434,7 +452,7 @@ updated_at = datetime.now(
 
 
 # ============================================================
-# Output
+# 13. Output
 # ============================================================
 
 result = {
@@ -477,7 +495,7 @@ result = {
 
 
 # ============================================================
-# Save JSON
+# 14. Save JSON
 # ============================================================
 
 with open("data.json", "w", encoding="utf-8") as f:
@@ -491,7 +509,7 @@ with open("data.json", "w", encoding="utf-8") as f:
 
 
 # ============================================================
-# Summary
+# 15. Summary
 # ============================================================
 
 print()
