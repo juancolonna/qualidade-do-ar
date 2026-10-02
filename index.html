@@ -228,6 +228,7 @@
                 <th>Sensor</th>
                 <th>Status</th>
                 <th>PM2.5 corrigido (µg/m³)</th>
+                <th>Estado</th>
             </tr>
 
         </thead>
@@ -259,6 +260,16 @@
             if (pm25 <= 125.4) return "#ff0000";
             if (pm25 <= 225.4) return "#8f3f97";
             return "#7e0023";
+        }
+
+        function getPM25Category(pm25) {
+            if (pm25 === null || isNaN(pm25)) return "—";
+            if (pm25 <= 9.0) return "Bom";
+            if (pm25 <= 35.4) return "Moderado";
+            if (pm25 <= 55.4) return "Insalubre para grupos sensíveis";
+            if (pm25 <= 125.4) return "Insalubre";
+            if (pm25 <= 225.4) return "Muito insalubre";
+            return "Perigoso";
         }
 
         async function loadData() {
@@ -453,16 +464,23 @@
                             : '<span class="offline">Offline</span>';
 
 
-                    const pm25 =
+                    const pm25Value =
                         sensor.pm2_5 !== null
-                            ? Number(sensor.pm2_5).toFixed(1)
+                            ? Number(sensor.pm2_5)
+                            : null;
+
+                    const pm25 =
+                        pm25Value !== null && !isNaN(pm25Value)
+                            ? pm25Value.toFixed(1)
                             : "--";
 
+                    const category = getPM25Category(pm25Value);
 
                     row.innerHTML = `
                         <td>${sensor.name}</td>
                         <td>${status}</td>
                         <td>${pm25}</td>
+                        <td>${category}</td>
                     `;
 
 
