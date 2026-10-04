@@ -24,7 +24,7 @@ SENSORS = [
     {"id": 161261, "name": "UEA_EducAIR_1", "lat": -3.130093, "lon": -60.026802},
     {"id": 161279, "name": "UEA_EducAIR_5", "lat": -3.096909, "lon": -59.969593},
     {"id": 161291, "name": "UEA_EducAIR_6", "lat": -3.128212, "lon": -59.986780},
-# {"id": 165047, "name": "UEA_EducAIR_14", "lat": -3.073211, "lon": -59.993156},
+    {"id": 165047, "name": "UEA_EducAIR_14", "lat": -3.073211, "lon": -59.993156},
     {"id": 165131, "name": "UEA_EducAIR_17", "lat": -3.022957, "lon": -60.055220},
     {"id": 177605, "name": "UEA_EducAIR_26", "lat": -3.079295, "lon": -59.933380},
     {"id": 181801, "name": "UEA_EducAIR_31", "lat": -3.103645, "lon": -60.049440},
