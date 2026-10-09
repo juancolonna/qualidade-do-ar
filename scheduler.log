@@ -1,0 +1,8 @@
+2026-10-09 12:11:19,992 INFO: Scheduler iniciado. Executando uma coleta inicial antes de entrar no agendamento horário. Branch: main
+2026-10-09 12:11:19,992 INFO: Iniciando ciclo de coleta e publicação.
+2026-10-09 12:11:19,992 INFO: Executando: git pull --rebase origin main
+2026-10-09 12:11:19,996 ERROR: Comando falhou (código 128): ['git', 'pull', '--rebase', 'origin', 'main']
+2026-10-09 12:11:19,996 INFO: Agendamento horário ativo: execução aos minutos :05 de cada hora.
+2026-10-09 12:14:50,120 INFO: Iniciando collect.py.
+2026-10-09 12:14:58,616 INFO: collect.py terminou com sucesso.
+2026-10-09 12:14:58,616 INFO: Agendamento ativo: collect.py será executado a cada hora, aos :05.
