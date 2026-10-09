@@ -3,7 +3,7 @@ import time
 import json
 import statistics
 import requests
-
+from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -16,21 +16,9 @@ API_KEY = os.environ["PURPLEAIR_API_KEY"]
 
 BASE_URL = "https://api.purpleair.com/v1"
 
-SENSORS = [
-    {"id": 31509, "name": "UEA-EST", "lat": -3.091649, "lon": -60.017590},
-    {"id": 315615, "name": "MIT_NAMA_UFAM", "lat": -3.089241, "lon": -59.964367},
-    {"id": 98395, "name": "FAS-Ar", "lat": -3.074871, "lon": -60.008675},
-    {"id": 161259, "name": "UEA_EDUCAIR_2", "lat": -3.131549, "lon": -60.004080},
-    {"id": 161261, "name": "UEA_EducAIR_1", "lat": -3.130093, "lon": -60.026802},
-    {"id": 161279, "name": "UEA_EducAIR_5", "lat": -3.096909, "lon": -59.969593},
-    {"id": 161291, "name": "UEA_EducAIR_6", "lat": -3.128212, "lon": -59.986780},
-   # {"id": 165047, "name": "UEA_EducAIR_14", "lat": -3.073211, "lon": -59.993156},
-    {"id": 165131, "name": "UEA_EducAIR_17", "lat": -3.022957, "lon": -60.055220},
-    {"id": 177605, "name": "UEA_EducAIR_26", "lat": -3.079295, "lon": -59.933380},
-    {"id": 181801, "name": "UEA_EducAIR_31", "lat": -3.103645, "lon": -60.049440},
-    {"id": 181825, "name": "UEA_EducAIR_32", "lat": -3.112573, "lon": -60.011880},
-    {"id": 205957, "name": "SEMA_MANAUS", "lat": -3.082140, "lon": -60.023293},
-]
+SENSORS_FILE = Path(__file__).with_name("sensors.json")
+with open(SENSORS_FILE, "r", encoding="utf-8") as file:
+    SENSORS = json.load(file)
 
 
 # ============================================================
