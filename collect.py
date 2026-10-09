@@ -141,8 +141,6 @@ end_timestamp = current_hour
 # Collect data
 # ============================================================
 
-pm01_values = []
-pm01_24h_values = []
 pm25_values = []
 pm25_24h_values = []
 pm10_values = []
@@ -178,8 +176,6 @@ for sensor in SENSORS:
             "lat": sensor["lat"],
             "lon": sensor["lon"],
             "online": False,
-            "pm0_1": None,
-            "pm0_1_24h": None,
             "pm2_5": None,
             "pm2_5_24h": None,
             "pm10": None,
@@ -210,8 +206,6 @@ for sensor in SENSORS:
             "lat": sensor["lat"],
             "lon": sensor["lon"],
             "online": False,
-            "pm0_1": None,
-            "pm0_1_24h": None,        
             "pm2_5": None,
             "pm2_5_24h": None,
             "pm10": None,
@@ -235,7 +229,7 @@ for sensor in SENSORS:
             sensor_index,
             end_timestamp,
             60,
-            "pm1.0_cf_1,pm2.5_cf_1,pm10.0_cf_1,humidity,temperature,pressure"
+            "pm2.5_cf_1,pm10.0_cf_1,humidity,temperature,pressure"
         )
 
     except requests.RequestException as e:
@@ -256,7 +250,7 @@ for sensor in SENSORS:
             sensor_index,
             end_timestamp,
             1440,
-            "pm1.0_cf_1,pm2.5_cf_1,pm10.0_cf_1,humidity"
+            "pm2.5_cf_1,pm10.0_cf_1,humidity"
         )
 
     except requests.RequestException as e:
@@ -270,9 +264,6 @@ for sensor in SENSORS:
     # --------------------------------------------------------
     # 5. Extrai os dados retornados pela API
     # --------------------------------------------------------
-
-    pm01 = get_record_values(history_1h, ["pm1.0_cf_1"])[0]
-    pm01_24h = get_record_values(history_24h, ["pm1.0_cf_1"])[0]
 
     pm25 = corrected_pm25(history_1h)
     pm25_24h = corrected_pm25(history_24h)
@@ -294,8 +285,6 @@ for sensor in SENSORS:
         "lat": sensor["lat"],
         "lon": sensor["lon"],
         "online": True,
-        "pm0_1": pm01,
-        "pm0_1_24h": pm01_24h,        
         "pm2_5": pm25,
         "pm2_5_24h": pm25_24h,
         "pm10": pm10,
@@ -304,12 +293,6 @@ for sensor in SENSORS:
         "temperature": temperature,
         "pressure": pressure
     })
-
-    if pm01 is not None:
-        pm01_values.append(pm01)
-
-    if pm01_24h is not None:
-        pm01_24h_values.append(pm01_24h)
 
     if pm25 is not None:
         pm25_values.append(pm25)
@@ -373,8 +356,6 @@ def pm_statistics(pm_values, number_online):
 
 number_online = sum(1 for sensor in sensor_results if sensor["online"])
 
-pm01_mean, pm01_ci95_lower, pm01_ci95_upper = pm_statistics(pm01_values, number_online) 
-pm01_24h_mean, pm01_24h_ci95_lower, pm01_24h_ci95_upper = pm_statistics(pm01_24h_values, number_online)
 pm25_mean, pm25_ci95_lower, pm25_ci95_upper = pm_statistics(pm25_values, number_online)
 pm25_24h_mean, pm25_24h_ci95_lower, pm25_24h_ci95_upper = pm_statistics(pm25_24h_values, number_online)
 pm10_mean, pm10_ci95_lower, pm10_ci95_upper = pm_statistics(pm10_values, number_online)
@@ -457,14 +438,6 @@ result = {
     "number_of_sensors": len(SENSORS),
     "number_online": number_online,
 
-    "pm1_0_mean": pm01_mean,
-    "pm1_0_ci95_lower": pm01_ci95_lower,
-    "pm1_0_ci95_upper": pm01_ci95_upper,
-
-    "pm1_0_24h_mean": pm01_24h_mean,
-    "pm1_0_24h_ci95_lower": pm01_24h_ci95_lower,
-    "pm1_0_24h_ci95_upper": pm01_24h_ci95_upper,
-
     "pm2_5_mean": pm25_mean,
     "pm2_5_ci95_lower": pm25_ci95_lower,
     "pm2_5_ci95_upper": pm25_ci95_upper,
@@ -500,21 +473,36 @@ result = {
 }
 
 # ============================================================
-# 13. Save JSON
+# 13. Save collected data
 # ============================================================
 
-with open("data.json", "w", encoding="utf-8") as f:
+# O período é identificado pelo fim da última hora completa.
+period_end_dt = datetime.fromtimestamp(end_timestamp, tz=manaus_tz)
 
-    json.dump(
-        result,
-        f,
-        ensure_ascii=False,
-        indent=2
-    )
+history_dir = (
+    Path(__file__).parent
+    / "historico"
+    / period_end_dt.strftime("%Y")
+    / period_end_dt.strftime("%m")
+    / period_end_dt.strftime("%d")
+)
 
+history_dir.mkdir(parents=True, exist_ok=True)
+
+history_file = history_dir / (period_end_dt.strftime("%H%M") + ".json")
+
+with history_file.open("w", encoding="utf-8") as f:
+    json.dump(result, f, ensure_ascii=False, indent=2)
 
 # ============================================================
-# 14. Summary
+# 14. Save JSON for dashboard
+# ============================================================
+
+with open(Path(__file__).parent / "data.json", "w", encoding="utf-8") as f:
+    json.dump(result, f, ensure_ascii=False, indent=2)
+
+# ============================================================
+# 15. Summary
 # ============================================================
 
 print("\n========================================")
