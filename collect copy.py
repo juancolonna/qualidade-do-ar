@@ -122,77 +122,6 @@ def corrected_pm25(history):
     else:
         return 4.21e-4 * value**2 + 0.392 * value + 3.44
 
-# ============================================================
-# US AQI
-# ============================================================
-
-def calculate_us_aqi(pm2_5):
-    """Calcula o US AQI baseado na média do PM2.5."""
-
-    if pm2_5 is None:
-        return None, None
-
-    # EPA: concentração truncada para uma casa decimal.
-    concentration = int(pm2_5 * 10) / 10
-
-    breakpoints = [
-        (0.0, 9.0, 0, 50, "Bom"),
-        (9.1, 35.4, 51, 100, "Moderado"),
-        (35.5, 55.4, 101, 150, "Insalubre para grupos sensíveis"),
-        (55.5, 125.4, 151, 200, "Insalubre"),
-        (125.5, 225.4, 201, 300, "Muito insalubre"),
-        (225.5, 325.4, 301, 500, "Perigoso"),
-    ]
-
-    for bp_lo, bp_hi, i_lo, i_hi, category in breakpoints:
-        if concentration <= bp_hi:
-            aqi = ((i_hi - i_lo) / (bp_hi - bp_lo) * (concentration - bp_lo) + i_lo)
-            return round(aqi), category
-
-    # Acima de 325.4 µg/m³ permanece na categoria Perigoso.
-    aqi = ((500 - 301)/(325.4 - 225.5)*(concentration-225.5)+301)
-
-    return round(aqi), "Perigoso"
-
-# ============================================================
-# 6. Statistics
-# ============================================================
-
-def pm_statistics(pm_values):
-    # Critical values of the two-sided t-Student distribution
-    # for a 95% confidence interval, with the available sample
-    # sizes (n = 1 to 12 sensors).
-    T_CRITICAL_95 = {
-        1: None,
-        2: 12.706,
-        3: 4.303,
-        4: 3.182,
-        5: 2.776,
-        6: 2.571,
-        7: 2.447,
-        8: 2.365,
-        9: 2.306,
-        10: 2.262,
-        11: 2.228,
-        12: 2.201,
-    }
-
-    n = sum(1 for pm_value in pm_values if pm_value is not None)
-
-    if n == 0:
-        return None, None, None
-
-    pm_mean = statistics.mean(pm_values)
-    if n < 2 or n not in T_CRITICAL_95 or T_CRITICAL_95[n] is None:
-        return round(pm_mean, 2), None, None
-
-    pm_std = statistics.stdev(pm_values)
-    t_critical = T_CRITICAL_95[n]
-    standard_error = pm_std / (n ** 0.5)
-    margin_of_error = t_critical * standard_error
-    pm_ci95_lower = pm_mean - margin_of_error
-    pm_ci95_upper = pm_mean + margin_of_error
-    return round(pm_mean, 2), round(pm_ci95_lower, 2), round(pm_ci95_upper, 2)
 
 # ============================================================
 # Time interval
@@ -213,7 +142,9 @@ end_timestamp = current_hour
 # ============================================================
 
 pm25_values = []
+pm25_24h_values = []
 pm10_values = []
+pm10_24h_values = []
 sensor_results = []
 humidity_values = []
 temperature_values = []
@@ -246,7 +177,9 @@ for sensor in SENSORS:
             "lon": sensor["lon"],
             "online": False,
             "pm2_5": None,
+            "pm2_5_24h": None,
             "pm10": None,
+            "pm10_24h": None,
             "humidity": None,
             "temperature": None,
             "pressure": None
@@ -274,7 +207,9 @@ for sensor in SENSORS:
             "lon": sensor["lon"],
             "online": False,
             "pm2_5": None,
+            "pm2_5_24h": None,
             "pm10": None,
+            "pm10_24h": None,
             "humidity": None,
             "temperature": None,
             "pressure": None
@@ -306,17 +241,42 @@ for sensor in SENSORS:
         continue
 
     # --------------------------------------------------------
-    # 4. Extrai os dados retornados pela API
+    # 4. Consulta histórico de uma hora de 24 horas
+    # --------------------------------------------------------
+
+    try:
+        # Últimas 24 horas completas
+        history_24h = get_sensor_history(
+            sensor_index,
+            end_timestamp,
+            1440,
+            "pm2.5_cf_1,pm10.0_cf_1,humidity"
+        )
+
+    except requests.RequestException as e:
+        print(
+            f"  Erro ao consultar histórico de 24 horas"
+            f"de {sensor_name}: {e}"
+        )
+
+        continue
+
+    # --------------------------------------------------------
+    # 5. Extrai os dados retornados pela API
     # --------------------------------------------------------
 
     pm25 = corrected_pm25(history_1h)
+    pm25_24h = corrected_pm25(history_24h)
+
     pm10 = get_record_values(history_1h, ["pm10.0_cf_1"])[0]
+    pm10_24h = get_record_values(history_24h, ["pm10.0_cf_1"])[0]
+
     humidity = get_record_values(history_1h, ["humidity"])[0]
     temperature = get_record_values(history_1h, ["temperature"])[0]
     pressure = get_record_values(history_1h, ["pressure"])[0]
 
     # --------------------------------------------------------
-    # 5. Armazena resultado do sensor
+    # 8. Armazena resultado do sensor
     # --------------------------------------------------------
 
     sensor_results.append({
@@ -326,7 +286,9 @@ for sensor in SENSORS:
         "lon": sensor["lon"],
         "online": True,
         "pm2_5": pm25,
+        "pm2_5_24h": pm25_24h,
         "pm10": pm10,
+        "pm10_24h": pm10_24h,
         "humidity": humidity,
         "temperature": temperature,
         "pressure": pressure
@@ -335,8 +297,14 @@ for sensor in SENSORS:
     if pm25 is not None:
         pm25_values.append(pm25)
 
+    if pm25_24h is not None:
+        pm25_24h_values.append(pm25_24h)
+
     if pm10 is not None:
         pm10_values.append(pm10)
+
+    if pm10_24h is not None:
+        pm10_24h_values.append(pm10_24h)
 
     if humidity is not None:
         humidity_values.append(humidity)
@@ -347,25 +315,98 @@ for sensor in SENSORS:
     if pressure is not None:
         pressure_values.append(pressure)
 
-
 # ============================================================
-# 7. Mean and Confidence Intervals
-# ============================================================
-
-pm25_mean, pm25_ci95_lower, pm25_ci95_upper = pm_statistics(pm25_values)
-pm10_mean, pm10_ci95_lower, pm10_ci95_upper = pm_statistics(pm10_values)
-humidity_mean, humidity_ci95_lower, humidity_ci95_upper = pm_statistics(humidity_values) 
-temperature_mean, temperature_ci95_lower, temperature_ci95_upper = pm_statistics(temperature_values) 
-pressure_mean, pressure_ci95_lower, pressure_ci95_upper = pm_statistics(pressure_values) 
-
-# ============================================================
-# 7. US AQI - PM2.5
+# 9. Statistics
 # ============================================================
 
-us_aqi, us_aqi_category = calculate_us_aqi(pm25_mean)
+def pm_statistics(pm_values, number_online):
+    # Critical values of the two-sided t-Student distribution
+    # for a 95% confidence interval, with the available sample
+    # sizes (n = 1 to 12 sensors).
+    T_CRITICAL_95 = {
+        1: None,
+        2: 12.706,
+        3: 4.303,
+        4: 3.182,
+        5: 2.776,
+        6: 2.571,
+        7: 2.447,
+        8: 2.365,
+        9: 2.306,
+        10: 2.262,
+        11: 2.228,
+        12: 2.201,
+    }
+
+    n = len(pm_values)
+    if n == 0:
+        return None, None, None
+
+    pm_mean = statistics.mean(pm_values)
+    if n < 2 or n not in T_CRITICAL_95 or T_CRITICAL_95[n] is None:
+        return round(pm_mean, 2), None, None
+
+    pm_std = statistics.stdev(pm_values)
+    t_critical = T_CRITICAL_95[n]
+    standard_error = pm_std / (n ** 0.5)
+    margin_of_error = t_critical * standard_error
+    pm_ci95_lower = pm_mean - margin_of_error
+    pm_ci95_upper = pm_mean + margin_of_error
+    return round(pm_mean, 2), round(pm_ci95_lower, 2), round(pm_ci95_upper, 2)
+
+number_online = sum(1 for sensor in sensor_results if sensor["online"])
+
+pm25_mean, pm25_ci95_lower, pm25_ci95_upper = pm_statistics(pm25_values, number_online)
+pm25_24h_mean, pm25_24h_ci95_lower, pm25_24h_ci95_upper = pm_statistics(pm25_24h_values, number_online)
+pm10_mean, pm10_ci95_lower, pm10_ci95_upper = pm_statistics(pm10_values, number_online)
+pm10_24h_mean, pm10_24h_ci95_lower, pm10_24h_ci95_upper = pm_statistics(pm10_24h_values, number_online)
+humidity_mean, humidity_ci95_lower, humidity_ci95_upper = pm_statistics(humidity_values, number_online) 
+temperature_mean, temperature_ci95_lower, temperature_ci95_upper = pm_statistics(temperature_values, number_online) 
+pressure_mean, pressure_ci95_lower, pressure_ci95_upper = pm_statistics(pressure_values, number_online) 
 
 # ============================================================
-# 8. Manaus timezone
+# 10. US AQI - PM2.5
+# ============================================================
+
+def calculate_us_aqi(pm_24h):
+    """Calcula o US AQI baseado no pior dos PMs usando a média de 24 horas."""
+
+    if pm_24h is None:
+        return None, None
+
+    # EPA: concentração truncada para uma casa decimal.
+    concentration = int(pm_24h * 10) / 10
+
+    breakpoints = [
+        (0.0, 9.0, 0, 50, "Bom"),
+        (9.1, 35.4, 51, 100, "Moderado"),
+        (35.5, 55.4, 101, 150, "Insalubre para grupos sensíveis"),
+        (55.5, 125.4, 151, 200, "Insalubre"),
+        (125.5, 225.4, 201, 300, "Muito insalubre"),
+        (225.5, 325.4, 301, 500, "Perigoso"),
+    ]
+
+    for bp_lo, bp_hi, i_lo, i_hi, category in breakpoints:
+
+        if concentration <= bp_hi:
+            aqi = (
+                (i_hi - i_lo)
+                / (bp_hi - bp_lo)
+                * (concentration - bp_lo)
+                + i_lo
+            )
+
+            return round(aqi), category
+
+    # Acima de 325.4 µg/m³ permanece na categoria Perigoso.
+    aqi = ((500 - 301)/(325.4 - 225.5)*(concentration-225.5)+301)
+
+    return round(aqi), "Perigoso"
+
+us_aqi, us_aqi_category = calculate_us_aqi(pm25_24h_mean)
+
+# ============================================================
+# 11. Manaus timezone
 # ============================================================
 
 manaus_tz = ZoneInfo("America/Manaus")
@@ -386,7 +427,7 @@ updated_at = datetime.now(
 
 
 # ============================================================
-# 9. Output
+# 12. Output
 # ============================================================
 
 result = {
@@ -395,15 +436,23 @@ result = {
     "period_end": period_end,
 
     "number_of_sensors": len(SENSORS),
-    "sensors_online": sum(1 for sensor in sensor_results if sensor["online"]),
+    "number_online": number_online,
 
     "pm2_5_mean": pm25_mean,
     "pm2_5_ci95_lower": pm25_ci95_lower,
     "pm2_5_ci95_upper": pm25_ci95_upper,
 
+    "pm2_5_24h_mean": pm25_24h_mean,
+    "pm2_5_24h_ci95_lower": pm25_24h_ci95_lower,
+    "pm2_5_24h_ci95_upper": pm25_24h_ci95_upper,
+
     "pm10_0_mean": pm10_mean,
     "pm10_0_ci95_lower": pm10_ci95_lower,
     "pm10_0_ci95_upper": pm10_ci95_upper,
+
+    "pm10_0_24h_mean": pm10_24h_mean,
+    "pm10_0_24h_ci95_lower": pm10_24h_ci95_lower,
+    "pm10_0_24h_ci95_upper": pm10_24h_ci95_upper,
 
     "humidity_mean": humidity_mean,
     "humidity_ci95_lower": humidity_ci95_lower,
@@ -424,7 +473,7 @@ result = {
 }
 
 # ============================================================
-# 10. Save collected data
+# 13. Save collected data
 # ============================================================
 
 # O período é identificado pelo fim da última hora completa.
@@ -446,20 +495,20 @@ with history_file.open("w", encoding="utf-8") as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
 
 # ============================================================
-# 11. Save JSON for dashboard
+# 14. Save JSON for dashboard
 # ============================================================
 
 with open(Path(__file__).parent / "data.json", "w", encoding="utf-8") as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
 
 # ============================================================
-# 12. Summary
+# 15. Summary
 # ============================================================
 
 print("\n========================================")
 print("Coleta concluída")
 print("========================================")
 print(f"Período: {period_start} - {period_end}")
-print(f"Sensores online: {result['sensors_online']}/{len(SENSORS)}")
+print(f"Sensores online: {number_online}/{len(SENSORS)}")
 print(f"US AQI: {us_aqi} - {us_aqi_category}")
 print("========================================")
