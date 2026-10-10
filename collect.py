@@ -20,7 +20,6 @@ SENSORS_FILE = Path(__file__).with_name("sensors.json")
 with open(SENSORS_FILE, "r", encoding="utf-8") as file:
     SENSORS = json.load(file)
 
-
 # ============================================================
 # PurpleAir API
 # ============================================================
@@ -30,19 +29,13 @@ def get_sensor_data(sensor_index):
 
     url = f"{BASE_URL}/sensors/{sensor_index}"
 
-    headers = {
-        "X-API-Key": API_KEY
-    }
-
-    params = {
-        "fields": "sensor_index,name,last_seen"
-    }
+    headers = {"X-API-Key": API_KEY}
 
     response = requests.get(
         url,
         headers=headers,
-        params=params,
-        timeout=90
+        params={"fields": "sensor_index,name,last_seen"},
+        timeout=120
     )
 
     response.raise_for_status()
@@ -50,7 +43,7 @@ def get_sensor_data(sensor_index):
     return response.json()["sensor"]
 
 
-def get_sensor_history(sensor_index, end_timestamp, average, fields):
+def get_sensor_history(sensor_index, end_timestamp, average):
     """Obtém o histórico de PM do sensor."""
 
     start_timestamp = end_timestamp - (average * 60)
@@ -63,7 +56,7 @@ def get_sensor_history(sensor_index, end_timestamp, average, fields):
         "start_timestamp": start_timestamp,
         "end_timestamp": end_timestamp,
         "average": average,
-        "fields": fields
+        "fields": {"pm2.5_cf_1,pm10.0_cf_1,humidity,temperature,pressure"}
     }
 
     response = requests.get(
@@ -259,10 +252,7 @@ for sensor in SENSORS:
 
     last_seen = info["last_seen"]
 
-    online = (
-        last_seen is not None
-        and now - last_seen <= 3600
-    )
+    online = (last_seen is not None and now - last_seen <= 3600)
 
     if not online:
         print("  Sensor offline.")
@@ -294,7 +284,6 @@ for sensor in SENSORS:
             sensor_index,
             end_timestamp,
             60,
-            "pm2.5_cf_1,pm10.0_cf_1,humidity,temperature,pressure"
         )
 
     except requests.RequestException as e:
