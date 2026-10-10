@@ -4,9 +4,8 @@ on:
 
   schedule:
 
-    # Executa aproximadamente 5 minutos depois
-    # de cada hora.
-    - cron: "15 * * * *"
+    # Executa a cada 30 minutos.
+    - cron: "*/30 * * * *"
       timezone: "America/Manaus"
 
   # Permite executar manualmente pelo GitHub
