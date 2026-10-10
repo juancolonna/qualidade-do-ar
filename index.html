@@ -75,6 +75,16 @@
         .mean-value { font-weight: bold; }
         .unit { font-weight: normal; }
 
+        .card h3,
+        .card .value,
+        .card .unit {
+            text-shadow:
+                -1px -1px 0 rgba(255, 255, 255, 0.55),
+                 1px -1px 0 rgba(255, 255, 255, 0.55),
+                -1px  1px 0 rgba(255, 255, 255, 0.55),
+                 1px  1px 0 rgba(255, 255, 255, 0.55);
+        }
+
         .legend {
             margin-top: 8px;
             font-size: 11px;
@@ -268,7 +278,7 @@
             </div>
         </div>
         <div class="legend-panel">
-            <strong class="legend-title">PM10.0 — média de 24 h</strong>
+            <strong class="legend-title">PM10.0 — OMS</strong>
             <div class="legend">
                 <span class="legend-item"><span class="legend-color" style="background:#00e400"></span>0–45 µg/m³: dentro da diretriz da OMS</span>
                 <span class="legend-item"><span class="legend-color" style="background:#ffff00"></span>Acima de 45 até 75 µg/m³: acima da diretriz da OMS</span>
@@ -276,7 +286,7 @@
                 <span class="legend-item"><span class="legend-color" style="background:#ff0000"></span>100–150 µg/m³: concentração muito elevada</span>
                 <span class="legend-item"><span class="legend-color" style="background:#7e0023"></span>Acima de 150 µg/m³: concentração extremamente elevada</span>
             </div>
-            <div class="legend">As categorias descritivas acima de 45 µg/m³ são classificações práticas do dashboard, não categorias oficiais da OMS. Comparar somente com a média de 24 horas.</div>
+            <div class="legend">As categorias descritivas acima de 45 µg/m³ são classificações práticas do dashboard, não categorias oficiais da OMS.</div>
         </div>
     </div>
 
@@ -385,7 +395,7 @@
                 /*
                  * Cor do card PM10.0 conforme as faixas da legenda.
                  * As categorias acima de 45 µg/m³ são descrições práticas,
-                 * não categorias oficiais da OMS. Aplicável à média de 24 h.
+                 * não categorias oficiais da OMS. Aplicável à média da última hora.
                  */
                 const pm10Card = document.getElementById("pm10-card");
                 const pm10Mean = Number(data.pm10_0_mean);
