@@ -166,36 +166,73 @@
             line-height: 1.5;
         }
 
+        /* Atribuição do OpenStreetMap menor e no canto superior direito. */
+        .leaflet-control-attribution {
+            font-size: 8px;
+            background: rgba(255, 255, 255, 0.7);
+            margin: 5px;
+        }
+
         /* Legenda compacta de PM2.5 dentro do mapa. */
         .map-legend {
             background: rgba(255, 255, 255, 0.9);
-            padding: 7px 9px;
+            padding: 5px 9px;
             border-radius: 5px;
             box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
             color: #222;
-            font-size: 10px;
-            line-height: 1.35;
+            font-size: 9px;
+            line-height: 1.25;
+            max-width: calc(100vw - 40px);
+            box-sizing: border-box;
         }
 
         .map-legend-title {
             font-weight: bold;
-            font-size: 11px;
-            margin-bottom: 4px;
+            font-size: 10px;
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+
+        .map-legend-items {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px 10px;
         }
 
         .map-legend-row {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
-            margin: 2px 0;
+            gap: 4px;
             white-space: nowrap;
         }
 
         .map-legend-color {
-            width: 10px;
-            height: 10px;
-            flex: 0 0 10px;
+            width: 9px;
+            height: 9px;
+            flex: 0 0 9px;
             border-radius: 2px;
+        }
+
+        .leaflet-bottom .leaflet-control.map-legend-control {
+            float: none;
+            margin: 0 10px 8px;
+        }
+
+        @media (max-width: 600px) {
+            .map-legend-items {
+                gap: 3px 7px;
+            }
+
+            .map-legend {
+                font-size: 8px;
+                padding: 4px 6px;
+            }
+
+            .map-legend-title {
+                font-size: 9px;
+            }
         }
 
         .map-marker {
@@ -388,22 +425,28 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>'
         }).addTo(map);
 
-        // Mantém apenas a atribuição essencial do provedor do mapa.
+        // Mantém apenas a atribuição essencial do provedor do mapa,
+        // posicionada no canto superior direito.
         map.attributionControl.setPrefix(false);
+        map.attributionControl.setPosition("topright");
 
-        // Legenda compacta com as mesmas cores e faixas usadas nos marcadores.
-        const mapLegend = L.control({ position: "bottomright" });
+        // Legenda horizontal e centralizada na parte inferior do mapa.
+        const mapLegend = L.control({ position: "bottomleft" });
 
         mapLegend.onAdd = function () {
-            const div = L.DomUtil.create("div", "map-legend");
+            const div = L.DomUtil.create("div", "map-legend-control");
             div.innerHTML = `
-                <div class="map-legend-title">PM2.5 (µg/m³)</div>
-                <div class="map-legend-row"><span class="map-legend-color" style="background:#00e400"></span>0–9,0 · Bom</div>
-                <div class="map-legend-row"><span class="map-legend-color" style="background:#ffff00"></span>9,1–35,4 · Moderado</div>
-                <div class="map-legend-row"><span class="map-legend-color" style="background:#ff7e00"></span>35,5–55,4 · Grupos sensíveis</div>
-                <div class="map-legend-row"><span class="map-legend-color" style="background:#ff0000"></span>55,5–125,4 · Insalubre</div>
-                <div class="map-legend-row"><span class="map-legend-color" style="background:#8f3f97"></span>125,5–225,4 · Muito insalubre</div>
-                <div class="map-legend-row"><span class="map-legend-color" style="background:#7e0023"></span>&gt;225,4 · Perigoso</div>
+                <div class="map-legend">
+                    <div class="map-legend-items">
+                        <span class="map-legend-title">PM2.5 (µg/m³)</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#00e400"></span>0–9,0 · Bom</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#ffff00"></span>9,1–35,4 · Moderado</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#ff7e00"></span>35,5–55,4 · Grupos sensíveis</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#ff0000"></span>55,5–125,4 · Insalubre</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#8f3f97"></span>125,5–225,4 · Muito insalubre</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#7e0023"></span>&gt;225,4 · Perigoso</span>
+                    </div>
+                </div>
             `;
 
             L.DomEvent.disableClickPropagation(div);
