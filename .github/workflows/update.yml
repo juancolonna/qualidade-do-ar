@@ -8,6 +8,11 @@ on:
     - cron: "*/30 * * * *"
       timezone: "America/Manaus"
 
+  # Executa também quando houver push na branch main.
+  push:
+    branches:
+      - main
+
   # Permite executar manualmente pelo GitHub
   workflow_dispatch:
 

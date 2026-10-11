@@ -166,6 +166,38 @@
             line-height: 1.5;
         }
 
+        /* Legenda compacta de PM2.5 dentro do mapa. */
+        .map-legend {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 7px 9px;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+            color: #222;
+            font-size: 10px;
+            line-height: 1.35;
+        }
+
+        .map-legend-title {
+            font-weight: bold;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .map-legend-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 2px 0;
+            white-space: nowrap;
+        }
+
+        .map-legend-color {
+            width: 10px;
+            height: 10px;
+            flex: 0 0 10px;
+            border-radius: 2px;
+        }
+
         .map-marker {
             border-radius: 50%;
             border: 2px solid white;
@@ -353,8 +385,33 @@
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
-            attribution: "&copy; OpenStreetMap contributors"
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>'
         }).addTo(map);
+
+        // Mantém apenas a atribuição essencial do provedor do mapa.
+        map.attributionControl.setPrefix(false);
+
+        // Legenda compacta com as mesmas cores e faixas usadas nos marcadores.
+        const mapLegend = L.control({ position: "bottomright" });
+
+        mapLegend.onAdd = function () {
+            const div = L.DomUtil.create("div", "map-legend");
+            div.innerHTML = `
+                <div class="map-legend-title">PM2.5 (µg/m³)</div>
+                <div class="map-legend-row"><span class="map-legend-color" style="background:#00e400"></span>0–9,0 · Bom</div>
+                <div class="map-legend-row"><span class="map-legend-color" style="background:#ffff00"></span>9,1–35,4 · Moderado</div>
+                <div class="map-legend-row"><span class="map-legend-color" style="background:#ff7e00"></span>35,5–55,4 · Grupos sensíveis</div>
+                <div class="map-legend-row"><span class="map-legend-color" style="background:#ff0000"></span>55,5–125,4 · Insalubre</div>
+                <div class="map-legend-row"><span class="map-legend-color" style="background:#8f3f97"></span>125,5–225,4 · Muito insalubre</div>
+                <div class="map-legend-row"><span class="map-legend-color" style="background:#7e0023"></span>&gt;225,4 · Perigoso</div>
+            `;
+
+            L.DomEvent.disableClickPropagation(div);
+            L.DomEvent.disableScrollPropagation(div);
+            return div;
+        };
+
+        mapLegend.addTo(map);
 
         function getPM25Color(pm25) {
             if (pm25 === null || isNaN(pm25)) return "#808080";
