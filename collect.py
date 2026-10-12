@@ -154,22 +154,37 @@ def calculate_us_aqi(pm2_5):
 
 def pm_statistics(pm_values):
     # Critical values of the two-sided t-Student distribution for a 95% confidence interval
-    n = sum(1 for pm_value in pm_values if pm_value is not None)
+    values = [value for value in pm_values if value is not None]
 
-    # two sensors have to be online at least
+    if len(values) < 2:
+        return None, None, None
+
+    pm_mean = statistics.mean(values)
+    pm_std = statistics.stdev(values)
+
+    if pm_std > 0:
+        filtered_values = [
+            value for value in values
+            if abs(value - pm_mean) <= 2 * pm_std
+        ]
+    else:
+        return None, None, None
+
+    n = len(filtered_values)
+
     if n < 2:
         return None, None, None
 
-    pm_mean = statistics.mean(pm_values)
-    pm_std = statistics.stdev(pm_values)
+    pm_mean = statistics.mean(filtered_values)
+    pm_std = statistics.stdev(filtered_values)
 
     t_critical = t.ppf(0.975, df=n - 1)
     standard_error = pm_std / (n ** 0.5)
 
-    pm_lower = pm_mean - (t_critical * standard_error)
-    pm_upper = pm_mean + (t_critical * standard_error)
+    pm_lower = pm_mean - t_critical * standard_error
+    pm_upper = pm_mean + t_critical * standard_error
 
-    return round(pm_mean, 2), round(pm_lower, 2), round(pm_upper, 2)
+    return (round(pm_mean, 2), round(pm_lower, 2), round(pm_upper, 2))
 
 # ============================================================
 # Time interval
