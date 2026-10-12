@@ -13,14 +13,10 @@ SENSORS_FILE = Path(__file__).with_name("sensors.json")
 
 # Limites geográficos da região de Manaus.
 # Ajuste estes valores caso queira ampliar ou reduzir a área consultada.
-NW_LAT = -2.90
-NW_LON = -61.00
-SE_LAT = -3.15
-SE_LON = -59.90
-
-ONLINE_WINDOW_SECONDS = 30 * 60
-TIMEOUT_SECONDS = 120
-
+NW_LAT = -2.970470
+NW_LON = -60.106201
+SE_LAT = -3.168626
+SE_LON = -59.841499
 
 def fetch_sensors():
     """Consulta os sensores externos na região configurada."""
@@ -36,7 +32,7 @@ def fetch_sensors():
             "selat": SE_LAT,
             "selng": SE_LON,
         },
-        timeout=TIMEOUT_SECONDS,
+        timeout=240,
     )
     response.raise_for_status()
 
@@ -50,23 +46,16 @@ def fetch_sensors():
 def main():
     try:
         fields, rows = fetch_sensors()
-
-        now = int(time.time())
         selected = []
 
         for row in rows:
             sensor = dict(zip(fields, row))
-            last_seen = sensor["last_seen"]
-            if last_seen is not None:
-                age = now - int(last_seen)
-
-                if age < ONLINE_WINDOW_SECONDS:
-                    selected.append({
-                        "id": sensor["sensor_index"],
-                        "name": sensor["name"],
-                        "lat": sensor["latitude"],
-                        "lon": sensor["longitude"],
-                    })
+            selected.append({
+                "id": sensor["sensor_index"],
+                "name": sensor["name"],
+                "lat": sensor["latitude"],
+                "lon": sensor["longitude"],
+            })
 
         selected.sort(key=lambda sensor: str(sensor["id"]))
 
