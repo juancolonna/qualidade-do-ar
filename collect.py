@@ -2,6 +2,7 @@ import os
 import time
 import json
 import statistics
+from scipy.stats import t
 import requests
 from pathlib import Path
 from datetime import datetime
@@ -152,40 +153,23 @@ def calculate_us_aqi(pm2_5):
 # ============================================================
 
 def pm_statistics(pm_values):
-    # Critical values of the two-sided t-Student distribution
-    # for a 95% confidence interval, with the available sample
-    # sizes (n = 1 to 12 sensors).
-    T_CRITICAL_95 = {
-        1: None,
-        2: 12.706,
-        3: 4.303,
-        4: 3.182,
-        5: 2.776,
-        6: 2.571,
-        7: 2.447,
-        8: 2.365,
-        9: 2.306,
-        10: 2.262,
-        11: 2.228,
-        12: 2.201,
-    }
-
+    # Critical values of the two-sided t-Student distribution for a 95% confidence interval
     n = sum(1 for pm_value in pm_values if pm_value is not None)
 
-    if n == 0:
+    # two sensors have to be online at least
+    if n < 2:
         return None, None, None
 
     pm_mean = statistics.mean(pm_values)
-    if n < 2 or n not in T_CRITICAL_95 or T_CRITICAL_95[n] is None:
-        return round(pm_mean, 2), None, None
-
     pm_std = statistics.stdev(pm_values)
-    t_critical = T_CRITICAL_95[n]
+
+    t_critical = t.ppf(0.975, df=n - 1)
     standard_error = pm_std / (n ** 0.5)
-    margin_of_error = t_critical * standard_error
-    pm_ci95_lower = pm_mean - margin_of_error
-    pm_ci95_upper = pm_mean + margin_of_error
-    return round(pm_mean, 2), round(pm_ci95_lower, 2), round(pm_ci95_upper, 2)
+
+    pm_lower = pm_mean - (t_critical * standard_error)
+    pm_upper = pm_mean + (t_critical * standard_error)
+
+    return round(pm_mean, 2), round(pm_lower, 2), round(pm_upper, 2)
 
 # ============================================================
 # Time interval
