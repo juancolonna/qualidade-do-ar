@@ -57,7 +57,7 @@ def get_sensor_history(sensor_index, end_timestamp, average):
         "start_timestamp": start_timestamp,
         "end_timestamp": end_timestamp,
         "average": average,
-        "fields": {"pm2.5_cf_1,pm10.0_cf_1,humidity,temperature,pressure"}
+        "fields": "pm2.5_cf_1,pm10.0_cf_1,humidity,temperature,pressure"
     }
 
     response = requests.get(
@@ -297,7 +297,20 @@ for sensor in SENSORS:
     # 4. Extrai os dados retornados pela API
     # --------------------------------------------------------
 
+    pm25_raw, humidity_raw = get_record_values(
+        history_1h,
+        ["pm2.5_cf_1", "humidity"]
+    )
+
     pm25 = corrected_pm25(history_1h)
+
+    if pm25 is None:
+        print(f"  PM2.5 ausente: {sensor_name} ({sensor_index})")
+        print(f"  Campos retornados: {history_1h.get('fields')}")
+        print(f"  Dados retornados: {history_1h.get('data')}")
+        print(f"  PM2.5 bruto: {pm25_raw}")
+        print(f"  Umidade: {humidity_raw}")
+
     pm10 = get_record_values(history_1h, ["pm10.0_cf_1"])[0]
     humidity = get_record_values(history_1h, ["humidity"])[0]
     temperature = get_record_values(history_1h, ["temperature"])[0]
