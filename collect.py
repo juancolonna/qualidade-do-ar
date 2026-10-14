@@ -165,7 +165,7 @@ def pm_statistics(pm_values):
     if pm_std > 0:
         filtered_values = [
             value for value in values
-            if abs(value - pm_mean) <= 2 * pm_std
+            if abs(value - pm_mean) <= 3 * pm_std
         ]
     else:
         return None, None, None
