@@ -2,3 +2,4 @@ collect copy.py
 collect copy 2.py
 scheduler.log
 sensors copy.json
+lapiam_api_key.txt
