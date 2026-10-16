@@ -490,8 +490,10 @@
                  * de timezone aqui.
                  */
 
-                const response = await fetch("data.json?t=" + Date.now());
-                //const response = await fetch("https://SEU_SERVIDOR/data.json");
+                // servidor purple air
+                // const response = await fetch("data.json?t=" + Date.now());
+                // servidor icomp
+                const response = await fetch("http://200.17.49.1:8000/data.json");
 
                 if (!response.ok) {
                     throw new Error(
