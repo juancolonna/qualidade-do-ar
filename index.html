@@ -154,6 +154,19 @@
             display: inline-block;
         }
 
+        #history-chart-container {
+            background: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #history-chart {
+            width: 100%;
+            max-height: 420px;
+        }
+
         #map {
             height: 500px;
             width: 100%;
@@ -349,6 +362,12 @@
         </div>
     </div>
 
+    <h2>Histórico dos últimos 5 dias</h2>
+    <div id="history-chart-container">
+        <canvas id="history-chart"></canvas>
+        <div id="history-chart-error" class="legend"></div>
+    </div>
+
     <div class="legends">
         <div class="legend-panel">
             <strong class="legend-title">Faixas de PM2.5</strong>
@@ -414,6 +433,7 @@
     </table>
 
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
@@ -475,6 +495,149 @@
             if (pm25 <= 225.4) return "Muito insalubre";
             return "Perigoso";
         }
+
+        async function loadHistoryChart() {
+            const errorElement = document.getElementById("history-chart-error");
+
+            try {
+                const response = await fetch("historico_5dias.json?t=" + Date.now());
+                if (!response.ok) {
+                    throw new Error("Não foi possível carregar historico_5dias.json");
+                }
+
+                const history = await response.json();
+
+                let previousDay = null;
+                const labels = history.timestamps.map(timestamp => {
+                    const date = new Date(timestamp * 1000);
+                    const dayKey = date.toLocaleDateString("en-CA", {
+                        timeZone: "America/Manaus"
+                    });
+
+                    if (dayKey === previousDay) {
+                        return "";
+                    }
+
+                    previousDay = dayKey;
+                    return date.toLocaleDateString("pt-BR", {
+                        timeZone: "America/Manaus",
+                        day: "2-digit",
+                        month: "2-digit"
+                    });
+                });
+
+                new Chart(document.getElementById("history-chart"), {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Limite inferior do IC 95%",
+                                data: history.pm2_5_ci95_lower,
+                                yAxisID: "y",
+                                borderColor: "rgba(214, 39, 40, 0)",
+                                backgroundColor: "rgba(214, 39, 40, 0)",
+                                pointRadius: 0,
+                                borderWidth: 0,
+                                spanGaps: false
+                            },
+                            {
+                                label: "IC 95% do PM2.5",
+                                data: history.pm2_5_ci95_upper,
+                                yAxisID: "y",
+                                borderColor: "rgba(214, 39, 40, 0)",
+                                backgroundColor: "rgba(214, 39, 40, 0.18)",
+                                pointRadius: 0,
+                                borderWidth: 0,
+                                fill: "-1",
+                                spanGaps: false
+                            },
+                            {
+                                label: "PM2.5 médio (µg/m³)",
+                                data: history.pm2_5,
+                                yAxisID: "y",
+                                borderColor: "#d62728",
+                                backgroundColor: "#d62728",
+                                pointRadius: 0,
+                                borderWidth: 2,
+                                spanGaps: false,
+                                order: 0
+                            },
+                            ...[
+                                { value: 9, color: "#00e400", label: "Limite: Bom" },
+                                { value: 35.5, color: "#ffff00", label: "Limite: Moderado" },
+                                { value: 55.5, color: "#ff7e00", label: "Limite: Grupos sensíveis" },
+                                { value: 125.5, color: "#ff0000", label: "Limite: Insalubre" },
+                                { value: 225.5, color: "#8f3f97", label: "Limite: Muito insalubre" },
+                                { value: 325.5, color: "#7e0023", label: "Limite: Perigoso" }
+                            ].map(limit => ({
+                                label: limit.label,
+                                data: history.timestamps.map(() => limit.value),
+                                yAxisID: "y",
+                                borderColor: limit.color,
+                                backgroundColor: limit.color,
+                                borderDash: [6, 5],
+                                borderWidth: 1,
+                                pointRadius: 0,
+                                pointHoverRadius: 0,
+                                fill: false,
+                                spanGaps: false,
+                                order: 1
+                            }))
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        interaction: {
+                            mode: "index",
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: true,
+                                filter: context => context.datasetIndex < 3
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    autoSkip: false,
+                                    maxRotation: 0,
+                                    minRotation: 0,
+                                    padding: 6,
+                                    callback: (value, index) => labels[index] || "",
+                                    font: {
+                                        size: 10
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: "Data (Manaus)"
+                                }
+                            },
+                            y: {
+                                type: "linear",
+                                position: "left",
+                                beginAtZero: true,
+                                suggestedMax: 325.5,
+                                title: {
+                                    display: true,
+                                    text: "Concentração (µg/m³)"
+                                }
+                            },
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Erro ao carregar histórico:", error);
+                errorElement.textContent = "Não foi possível carregar o gráfico histórico.";
+            }
+        }
+
 
         async function loadData() {
 
@@ -767,6 +930,7 @@
          */
 
         loadData();
+        loadHistoryChart();
 
     </script>
 
