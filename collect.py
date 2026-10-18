@@ -464,3 +464,67 @@ print(f"Período: {period_start} - {period_end}")
 print(f"Sensores online: {result['sensors_online']}/{len(SENSORS)}")
 print(f"US AQI: {us_aqi} - {us_aqi_category}")
 print("========================================")
+
+# ============================================================
+# 13. Generate history for dashboard
+# ============================================================
+
+def generate_history(history_days):
+    history_cutoff = end_timestamp - (history_days * 24 * 3600)
+    history_records = []
+    history_root = Path(__file__).parent / "historico"
+
+    for historical_file in history_root.glob("*/*/*/*.json"):
+        try:
+            with historical_file.open("r", encoding="utf-8") as f:
+                record = json.load(f)
+
+            record_time = int(
+                datetime.strptime(
+                    record["period_end"], "%d/%m/%Y %H:%M"
+                ).replace(tzinfo=manaus_tz).timestamp()
+            )
+
+            if history_cutoff < record_time <= end_timestamp:
+                history_records.append({
+                    "timestamp": record_time,
+                    "pm2_5": record.get("pm2_5_mean"),
+                    "pm2_5_ci95_lower": record.get("pm2_5_ci95_lower"),
+                    "pm2_5_ci95_upper": record.get("pm2_5_ci95_upper"),
+                    "pm10": record.get("pm10_0_mean"),
+                    "us_aqi": record.get("us_aqi")
+                })
+
+        except (OSError, ValueError, KeyError, json.JSONDecodeError) as e:
+            print(f"Erro ao ler histórico {historical_file}: {e}")
+
+    history_records.sort(key=lambda item: item["timestamp"])
+
+    history_output = {
+        "updated_at": updated_at,
+        "timestamps": [item["timestamp"] for item in history_records],
+        "pm2_5": [item["pm2_5"] for item in history_records],
+        "pm2_5_ci95_lower": [
+            item["pm2_5_ci95_lower"] for item in history_records
+        ],
+        "pm2_5_ci95_upper": [
+            item["pm2_5_ci95_upper"] for item in history_records
+        ],
+        "pm10": [item["pm10"] for item in history_records],
+        "us_aqi": [item["us_aqi"] for item in history_records]
+    }
+
+    output_file = Path(__file__).parent / f"historico_{history_days}dias.json"
+
+    with output_file.open("w", encoding="utf-8") as f:
+        json.dump(history_output, f, ensure_ascii=False, separators=(",", ":"))
+
+    print(
+        f"Histórico de {history_days} dias salvo: "
+        f"{len(history_records)} registros"
+    )
+
+
+# Gere os períodos desejados chamando a função uma vez para cada período.
+for days in [5, 10, 30, 60]:
+    generate_history(days)
