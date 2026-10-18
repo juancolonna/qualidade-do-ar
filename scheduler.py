@@ -70,6 +70,33 @@ def run_update_sensors_list():
         logging.exception("Erro inesperado ao atualizar a lista de sensores.")
 
 
+
+def run_backup_historico():
+    """Envia arquivos novos ou modificados do histórico para o Google Drive."""
+    history_dir = BASE_DIR / "historico"
+    drive_dir = "gdrive:qualidade-do-ar/historico"
+
+    logging.info("Iniciando backup do histórico para o Google Drive.")
+
+    try:
+        subprocess.run(
+            ["rclone", "copy", str(history_dir), drive_dir],
+            cwd=BASE_DIR,
+            check=True,
+            timeout=30 * 60,
+        )
+        logging.info("Backup do histórico para o Google Drive concluído.")
+
+    except subprocess.TimeoutExpired:
+        logging.error("Backup do histórico excedeu o limite de 30 minutos.")
+
+    except subprocess.CalledProcessError as exc:
+        logging.error("Backup do histórico falhou com código de erro %s.", exc.returncode)
+
+    except Exception:
+        logging.exception("Erro inesperado ao enviar o histórico para o Google Drive.")
+
+
 if __name__ == "__main__":
 
     # Executa imediatamente ao iniciar ou reiniciar o servidor.
@@ -82,6 +109,10 @@ if __name__ == "__main__":
     # Atualiza a lista de sensores todos os dias às 23:30.
     schedule.every().day.at("23:30").do(run_update_sensors_list)
     logging.info("Agendamento ativo: update_sensors_list.py será executado diariamente às 23:30.")
+
+    # Envia o histórico para o Google Drive todos os dias às 00:30.
+    schedule.every().day.at("00:30").do(run_backup_historico)
+    logging.info("Agendamento ativo: backup do histórico será executado diariamente às 00:30.")
 
     while True:
         schedule.run_pending()
