@@ -11,6 +11,7 @@ import schedule
 
 BASE_DIR = Path(__file__).resolve().parent
 COLLECT_SCRIPT = BASE_DIR / "collect.py"
+SENSOR_LIST_UPDATE = BASE_DIR / "update_sensors_list.py"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,6 +45,31 @@ def run_collect():
         logging.exception("Erro inesperado ao executar collect.py.")
 
 
+def run_update_sensors_list():
+    logging.info("Iniciando update_sensors_list.py.")
+
+    try:
+        subprocess.run(
+            [sys.executable, str(SENSOR_LIST_UPDATE)],
+            cwd=BASE_DIR,
+            check=True,
+            timeout=30 * 60,
+        )
+        logging.info("update_sensors_list.py terminou com sucesso.")
+
+    except subprocess.TimeoutExpired:
+        logging.error("update_sensors_list.py excedeu o limite de 30 minutos.")
+
+    except subprocess.CalledProcessError as exc:
+        logging.error(
+            "update_sensors_list.py terminou com código de erro %s.",
+            exc.returncode,
+        )
+
+    except Exception:
+        logging.exception("Erro inesperado ao atualizar a lista de sensores.")
+
+
 if __name__ == "__main__":
 
     # Executa imediatamente ao iniciar ou reiniciar o servidor.
@@ -52,6 +78,10 @@ if __name__ == "__main__":
     # Depois, executa uma vez por hora, aos 5 minutos de cada hora.
     schedule.every().hour.at(":05").do(run_collect)
     logging.info("Agendamento ativo: collect.py será executado a cada hora, aos :05.")
+
+    # Atualiza a lista de sensores todos os dias às 23:30.
+    schedule.every().day.at("23:30").do(run_update_sensors_list)
+    logging.info("Agendamento ativo: update_sensors_list.py será executado diariamente às 23:30.")
 
     while True:
         schedule.run_pending()
