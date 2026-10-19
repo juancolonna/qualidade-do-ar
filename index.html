@@ -500,7 +500,7 @@
             const errorElement = document.getElementById("history-chart-error");
 
             try {
-                const response = await fetch("historico_5dias.json?t=" + Date.now());
+                const response = await fetch("https://www.aqi.icomp.ufam.edu.br/historico_5dias.json?t=" + Date.now());
                 if (!response.ok) {
                     throw new Error("Não foi possível carregar historico_5dias.json");
                 }
@@ -532,17 +532,7 @@
                         labels: labels,
                         datasets: [
                             {
-                                label: "Limite inferior do IC 95%",
-                                data: history.pm2_5_ci95_lower,
-                                yAxisID: "y",
-                                borderColor: "rgba(214, 39, 40, 0)",
-                                backgroundColor: "rgba(214, 39, 40, 0)",
-                                pointRadius: 0,
-                                borderWidth: 0,
-                                spanGaps: false
-                            },
-                            {
-                                label: "IC 95% do PM2.5",
+                                label: "IC 95% superior",
                                 data: history.pm2_5_ci95_upper,
                                 yAxisID: "y",
                                 borderColor: "rgba(214, 39, 40, 0)",
@@ -562,6 +552,16 @@
                                 borderWidth: 1,
                                 spanGaps: false,
                                 order: 0
+                            },
+                            {
+                                label: "IC 95% inferior",
+                                data: history.pm2_5_ci95_lower,
+                                yAxisID: "y",
+                                borderColor: "rgba(214, 39, 40, 0)",
+                                backgroundColor: "rgba(214, 39, 40, 0)",
+                                pointRadius: 0,
+                                borderWidth: 0,
+                                spanGaps: false
                             },
                             ...[
                                 { value: 9, color: "#00e400", label: "Limite: Bom" },
@@ -683,7 +683,7 @@
                 //const response = await fetch("data.json?t=" + Date.now());
                 // servidor icomp
                 // const response = await fetch("http://200.17.49.1:8080/data.json");
-                const response = await fetch("https://www.aqi.icomp.ufam.edu.br:443/data.json");
+                const response = await fetch("https://www.aqi.icomp.ufam.edu.br:443/data.json?t=" + Date.now());
 
                 if (!response.ok) {
                     throw new Error(
