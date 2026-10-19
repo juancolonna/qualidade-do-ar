@@ -500,7 +500,7 @@
             const errorElement = document.getElementById("history-chart-error");
 
             try {
-                const response = await fetch("historico_5dias.json");
+                const response = await fetch("historico_5dias.json?t=" + Date.now());
                 if (!response.ok) {
                     throw new Error("Não foi possível carregar historico_5dias.json");
                 }
