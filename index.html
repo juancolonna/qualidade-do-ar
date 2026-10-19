@@ -623,10 +623,10 @@
                                 type: "linear",
                                 position: "left",
                                 beginAtZero: true,
-                                suggestedMax: 325.5,
+                                suggestedMax: 320,
                                 title: {
                                     display: true,
-                                    text: "Concentração (µg/m³)"
+                                    text: "PM2.5 (µg/m³)"
                                 }
                             },
                         }
@@ -657,7 +657,7 @@
                 //const response = await fetch("data.json?t=" + Date.now());
                 // servidor icomp
                 // const response = await fetch("http://200.17.49.1:8080/data.json");
-                const response = await fetch("https://www.aqi.icomp.ufam.edu.br/data.json?t=" + Date.now());
+                const response = await fetch("https://www.aqi.icomp.ufam.edu.br:443/data.json");
 
                 if (!response.ok) {
                     throw new Error(
