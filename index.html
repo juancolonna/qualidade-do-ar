@@ -597,13 +597,39 @@
                             legend: {
                                 display: false
                             },
+                            title: {
+                                display: true,
+                                text: "PM2.5 (µg/m³)"
+                            },
                             tooltip: {
                                 enabled: true,
-                                filter: context => context.datasetIndex < 3
+                                filter: context => context.datasetIndex < 3,
+                                callbacks: {
+                                    title: function(items) {
+                                        const index = items[0].dataIndex;
+                                        const timestamp = history.timestamps[index];
+
+                                        return new Date(timestamp * 1000).toLocaleTimeString(
+                                            "pt-BR",
+                                            {
+                                                timeZone: "America/Manaus",
+                                                day: "2-digit",
+                                                month: "2-digit",
+                                                year: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                hour12: false
+                                            }
+                                        );
+                                    }
+                                }
                             }
                         },
                         scales: {
                             x: {
+                                grid: {
+                                    display: false
+                                },
                                 ticks: {
                                     autoSkip: false,
                                     maxRotation: 0,
@@ -624,10 +650,10 @@
                                 position: "left",
                                 beginAtZero: true,
                                 suggestedMax: 320,
-                                title: {
-                                    display: true,
-                                    text: "PM2.5 (µg/m³)"
-                                }
+                                // title: {
+                                //     display: true,
+                                //     text: 
+                                // }
                             },
                         }
                     }
