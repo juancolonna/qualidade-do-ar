@@ -165,7 +165,7 @@ def pm_statistics(pm_values):
     if pm_std > 0:
         filtered_values = [
             value for value in values
-            if abs(value - pm_mean) <= 5 * pm_std
+            if abs(value - pm_mean) <= 6 * pm_std
         ]
     else:
         return None, None, None
@@ -192,13 +192,16 @@ def pm_statistics(pm_values):
 
 now = int(time.time())
 
-# Início da hora atual
+# # Início da hora atual
 current_hour = now - (now % 3600)
 
-# Última hora completa
+# # Última hora completa
 start_timestamp = current_hour - 3600
 end_timestamp = current_hour
 
+# Recuperação manual:
+# start_timestamp = 1792000800
+# end_timestamp = 1792004400
 
 # ============================================================
 # Collect data

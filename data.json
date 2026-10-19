@@ -1,26 +1,26 @@
 {
-  "updated_at": "18/10/2026 14:37",
-  "period_start": "18/10/2026 13:00",
-  "period_end": "18/10/2026 14:00",
+  "updated_at": "18/10/2026 21:28",
+  "period_start": "14/10/2026 14:00",
+  "period_end": "14/10/2026 15:00",
   "number_of_sensors": 15,
-  "sensors_online": 13,
-  "pm2_5_mean": 91.18,
-  "pm2_5_ci95_lower": 79.43,
-  "pm2_5_ci95_upper": 102.93,
-  "pm10_0_mean": 183.31,
-  "pm10_0_ci95_lower": 159.86,
-  "pm10_0_ci95_upper": 206.76,
-  "humidity_mean": 59.31,
-  "humidity_ci95_lower": 56.24,
-  "humidity_ci95_upper": 62.37,
-  "temperature_mean": 90.38,
-  "temperature_ci95_lower": 88.74,
-  "temperature_ci95_upper": 92.03,
-  "pressure_mean": 1003.21,
-  "pressure_ci95_lower": 1001.68,
-  "pressure_ci95_upper": 1004.73,
-  "us_aqi": 176,
-  "us_aqi_category": "Insalubre",
+  "sensors_online": 12,
+  "pm2_5_mean": 29.74,
+  "pm2_5_ci95_lower": 22.9,
+  "pm2_5_ci95_upper": 36.59,
+  "pm10_0_mean": 54.38,
+  "pm10_0_ci95_lower": 40.78,
+  "pm10_0_ci95_upper": 67.97,
+  "humidity_mean": 37.33,
+  "humidity_ci95_lower": 32.99,
+  "humidity_ci95_upper": 41.68,
+  "temperature_mean": 107.33,
+  "temperature_ci95_lower": 104.46,
+  "temperature_ci95_upper": 110.2,
+  "pressure_mean": 1000.74,
+  "pressure_ci95_lower": 999.1,
+  "pressure_ci95_upper": 1002.38,
+  "us_aqi": 89,
+  "us_aqi_category": "Moderado",
   "sensors": [
     {
       "id": 161259,
@@ -28,11 +28,11 @@
       "lat": -3.131549,
       "lon": -60.00408,
       "online": true,
-      "pm2_5": 112.9304,
-      "pm10": 223.8,
-      "humidity": 66,
-      "temperature": 89,
-      "pressure": 1005.88
+      "pm2_5": 44.3522,
+      "pm10": 83.4,
+      "humidity": 47,
+      "temperature": 102,
+      "pressure": 1003.34
     },
     {
       "id": 161261,
@@ -40,11 +40,11 @@
       "lat": -3.130093,
       "lon": -60.026802,
       "online": true,
-      "pm2_5": 100.08220000000001,
-      "pm10": 194.4,
-      "humidity": 57,
-      "temperature": 90,
-      "pressure": 1006.06
+      "pm2_5": 43.0168,
+      "pm10": 78.8,
+      "humidity": 40,
+      "temperature": 106,
+      "pressure": 1003.52
     },
     {
       "id": 161279,
@@ -52,11 +52,11 @@
       "lat": -3.096909,
       "lon": -59.969593,
       "online": true,
-      "pm2_5": 78.69460000000001,
-      "pm10": 170.4,
-      "humidity": 65,
-      "temperature": 85,
-      "pressure": 999.49
+      "pm2_5": 15.4054,
+      "pm10": 29.2,
+      "humidity": 43,
+      "temperature": 100,
+      "pressure": 996.82
     },
     {
       "id": 161291,
@@ -76,11 +76,11 @@
       "lat": -3.073211,
       "lon": -59.993156,
       "online": true,
-      "pm2_5": 93.38680000000001,
-      "pm10": 186.4,
-      "humidity": 52,
-      "temperature": 93,
-      "pressure": 1006.0
+      "pm2_5": 18.0608,
+      "pm10": 29.4,
+      "humidity": 28,
+      "temperature": 113,
+      "pressure": 1003.27
     },
     {
       "id": 165067,
@@ -88,23 +88,23 @@
       "lat": -3.094905,
       "lon": -59.986965,
       "online": true,
-      "pm2_5": 108.7586,
-      "pm10": 220.2,
-      "humidity": 53,
-      "temperature": 93,
-      "pressure": 1000.18
+      "pm2_5": 22.7616,
+      "pm10": 40.0,
+      "humidity": 30,
+      "temperature": 112,
+      "pressure": 997.67
     },
     {
       "id": 165131,
       "name": "UEA_EducAIR_17",
       "lat": -3.022957,
       "lon": -60.05522,
-      "online": true,
-      "pm2_5": 41.1018,
-      "pm10": 80.0,
-      "humidity": 61,
-      "temperature": 88,
-      "pressure": 1001.57
+      "online": false,
+      "pm2_5": null,
+      "pm10": null,
+      "humidity": null,
+      "temperature": null,
+      "pressure": null
     },
     {
       "id": 177605,
@@ -124,11 +124,11 @@
       "lat": -3.103645,
       "lon": -60.04944,
       "online": true,
-      "pm2_5": 99.7458,
-      "pm10": 200.2,
-      "humidity": 53,
-      "temperature": 95,
-      "pressure": 1004.67
+      "pm2_5": 39.102000000000004,
+      "pm10": 73.5,
+      "humidity": 38,
+      "temperature": 108,
+      "pressure": 1001.99
     },
     {
       "id": 181825,
@@ -136,11 +136,11 @@
       "lat": -3.112573,
       "lon": -60.01188,
       "online": true,
-      "pm2_5": 107.4554,
-      "pm10": 220.4,
-      "humidity": 59,
-      "temperature": 92,
-      "pressure": 1002.05
+      "pm2_5": 43.858599999999996,
+      "pm10": 84.5,
+      "humidity": 43,
+      "temperature": 105,
+      "pressure": 999.44
     },
     {
       "id": 181835,
@@ -148,11 +148,11 @@
       "lat": -3.01552,
       "lon": -59.865036,
       "online": true,
-      "pm2_5": 95.99000000000001,
-      "pm10": 194.5,
-      "humidity": 68,
-      "temperature": 88,
-      "pressure": 1000.7
+      "pm2_5": 20.956400000000002,
+      "pm10": 36.9,
+      "humidity": 40,
+      "temperature": 106,
+      "pressure": 997.89
     },
     {
       "id": 205957,
@@ -160,11 +160,11 @@
       "lat": -3.08214,
       "lon": -60.023293,
       "online": true,
-      "pm2_5": 91.08800000000001,
-      "pm10": 180.4,
-      "humidity": 58,
-      "temperature": 88,
-      "pressure": 1005.02
+      "pm2_5": 31.781200000000002,
+      "pm10": 56.9,
+      "humidity": 36,
+      "temperature": 106,
+      "pressure": 1002.51
     },
     {
       "id": 31509,
@@ -172,11 +172,11 @@
       "lat": -3.091649,
       "lon": -60.01759,
       "online": true,
-      "pm2_5": 81.536,
-      "pm10": 163.4,
-      "humidity": 60,
-      "temperature": 91,
-      "pressure": 1006.08
+      "pm2_5": 33.2552,
+      "pm10": 61.1,
+      "humidity": 42,
+      "temperature": 106,
+      "pressure": 1003.38
     },
     {
       "id": 315615,
@@ -184,11 +184,11 @@
       "lat": -3.089241,
       "lon": -59.964367,
       "online": true,
-      "pm2_5": 103.4882,
-      "pm10": 204.0,
-      "humidity": 57,
-      "temperature": 91,
-      "pressure": 1000.64
+      "pm2_5": 21.2876,
+      "pm10": 34.2,
+      "humidity": 24,
+      "temperature": 116,
+      "pressure": 998.24
     },
     {
       "id": 98395,
@@ -196,11 +196,11 @@
       "lat": -3.074871,
       "lon": -60.008675,
       "online": true,
-      "pm2_5": 71.0932,
-      "pm10": 144.9,
-      "humidity": 62,
-      "temperature": 92,
-      "pressure": 1003.34
+      "pm2_5": 23.1014,
+      "pm10": 44.6,
+      "humidity": 37,
+      "temperature": 108,
+      "pressure": 1000.81
     }
   ]
 }
