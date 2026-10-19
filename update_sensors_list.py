@@ -57,14 +57,35 @@ def main():
                 "lon": sensor["longitude"],
             })
 
-        selected.sort(key=lambda sensor: str(sensor["id"]))
+        # Carrega os sensores já registrados, sem removê-los.
+        if SENSORS_FILE.exists():
+            existing = json.loads(SENSORS_FILE.read_text(encoding="utf-8"))
+            if not isinstance(existing, list):
+                raise ValueError("sensors.json deve conter uma lista de sensores.")
+        else:
+            existing = []
+
+        # Usa o ID para evitar duplicatas e acrescentar somente sensores novos.
+        existing_ids = {str(sensor["id"]) for sensor in existing}
+        added = 0
+
+        for sensor in selected:
+            if str(sensor["id"]) not in existing_ids:
+                existing.append(sensor)
+                existing_ids.add(str(sensor["id"]))
+                added += 1
+
+        existing.sort(key=lambda sensor: str(sensor["id"]))
 
         SENSORS_FILE.write_text(
-            json.dumps(selected, ensure_ascii=False, indent=2) + "\n",
+            json.dumps(existing, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
 
-        print(f"sensors.json atualizado: {len(selected)} sensores online.")
+        print(
+            f"sensors.json atualizado: {len(existing)} sensores no total; "
+            f"{added} novos adicionados."
+        )
 
     except (requests.RequestException, ValueError, RuntimeError, KeyError, TypeError, OSError) as error:
         print(f"Erro ao atualizar sensors.json: {error}", file=sys.stderr)
