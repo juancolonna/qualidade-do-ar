@@ -288,15 +288,29 @@
 
         table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
             background: white;
+            overflow-wrap: break-word;
         }
 
         th,
         td {
-            padding: 10px;
+            padding: 8px 4px;
             border-bottom: 1px solid #ddd;
             text-align: left;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 600px) {
+            table {
+                font-size: 12px;
+            }
+
+            th,
+            td {
+                padding: 6px 3px;
+            }
         }
 
         th {
