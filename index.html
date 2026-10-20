@@ -506,164 +506,145 @@
             const errorElement = document.getElementById("history-chart-error");
 
             try {
-                const response = await fetch("https://www.aqi.icomp.ufam.edu.br/historico_5dias.json?t=" + Date.now());
+                const response = await fetch(
+                    "https://www.aqi.icomp.ufam.edu.br/historico_5dias.json?t=" + Date.now()
+                );
                 if (!response.ok) {
                     throw new Error("Não foi possível carregar historico_5dias.json");
                 }
 
                 const history = await response.json();
 
-                let previousDay = null;
-                const labels = history.timestamps.map(timestamp => {
-                    const date = new Date(timestamp * 1000);
-                    const dayKey = date.toLocaleDateString("en-CA", {
-                        timeZone: "America/Manaus"
-                    });
-
-                    if (dayKey === previousDay) {
-                        return "";
-                    }
-
-                    previousDay = dayKey;
-                    return date.toLocaleDateString("pt-BR", {
-                        timeZone: "America/Manaus",
-                        day: "2-digit",
-                        month: "2-digit"
-                    });
+                // Agrupa as observações por hora local de Manaus. Horas sem coleta
+                // permanecem com valor null e, portanto, não geram barras.
+                const hourly = new Map();
+                const dateFormatter = new Intl.DateTimeFormat("en-CA", {
+                    timeZone: "America/Manaus",
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    hourCycle: "h23"
                 });
 
-                new Chart(document.getElementById("history-chart"), {
-                    type: "line",
+                history.timestamps.forEach((timestamp, index) => {
+                    const value = history.pm2_5[index];
+                    if (timestamp == null || value == null || !Number.isFinite(Number(value))) {
+                        return;
+                    }
+
+                    const parts = Object.fromEntries(
+                        dateFormatter.formatToParts(new Date(Number(timestamp) * 1000))
+                            .map(part => [part.type, part.value])
+                    );
+                    const key = `${parts.year}-${parts.month}-${parts.day} ${parts.hour}`;
+
+                    if (!hourly.has(key)) {
+                        hourly.set(key, {
+                            timestamp: Number(timestamp),
+                            values: []
+                        });
+                    }
+                    hourly.get(key).values.push(Number(value));
+                });
+
+                // Gera todas as horas do período, incluindo lacunas sem dados.
+                const validTimestamps = history.timestamps
+                    .filter(timestamp => timestamp != null && Number.isFinite(Number(timestamp)))
+                    .map(Number);
+
+                if (validTimestamps.length === 0) {
+                    throw new Error("O histórico não contém timestamps válidos");
+                }
+
+                const hourMs = 60 * 60 * 1000;
+                const firstHour = Math.floor(Math.min(...validTimestamps) / 3600) * 3600;
+                const lastHour = Math.floor(Math.max(...validTimestamps) / 3600) * 3600;
+                const labels = [];
+                const values = [];
+                const tooltipLabels = [];
+
+                for (let timestamp = firstHour; timestamp <= lastHour; timestamp += 3600) {
+                    const parts = Object.fromEntries(
+                        dateFormatter.formatToParts(new Date(timestamp * 1000))
+                            .map(part => [part.type, part.value])
+                    );
+                    const key = `${parts.year}-${parts.month}-${parts.day} ${parts.hour}`;
+                    const hourData = hourly.get(key);
+                    const value = hourData
+                        ? hourData.values.reduce((sum, item) => sum + item, 0) / hourData.values.length
+                        : null;
+
+                    // Mostra a data na primeira barra de cada dia e a hora nas demais.
+                    const isFirstHourOfDay = parts.hour === "00";
+                    labels.push(isFirstHourOfDay
+                        ? `${parts.day}/${parts.month} ${parts.hour}h`
+                        : `${parts.hour}h`);
+                    values.push(value);
+                    tooltipLabels.push(`${parts.day}/${parts.month}/${parts.year} ${parts.hour}:00`);
+                }
+
+                // Destrói uma instância anterior, caso o gráfico seja recarregado.
+                const canvas = document.getElementById("history-chart");
+                if (Chart.getChart(canvas)) Chart.getChart(canvas).destroy();
+
+                new Chart(canvas, {
+                    type: "bar",
                     data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: "IC 95% superior",
-                                data: history.pm2_5_ci95_upper,
-                                yAxisID: "y",
-                                borderColor: "rgba(214, 39, 40, 0)",
-                                backgroundColor: "rgba(214, 39, 40, 0.18)",
-                                pointRadius: 0,
-                                borderWidth: 0,
-                                fill: "2",
-                                spanGaps: false
+                        labels,
+                        datasets: [{
+                            label: "PM2.5 médio (µg/m³)",
+                            data: values,
+                            backgroundColor: context => {
+                                const value = context.raw;
+                                return value == null || !Number.isFinite(Number(value))
+                                    ? "rgba(0, 0, 0, 0)"
+                                    : getPM25Color(Number(value));
                             },
-                            {
-                                label: "PM2.5 médio (µg/m³)",
-                                data: history.pm2_5,
-                                yAxisID: "y",
-                                borderColor: "#d62728",
-                                backgroundColor: "#d62728",
-                                pointRadius: 0,
-                                borderWidth: 1,
-                                spanGaps: false,
-                                order: 0
-                            },
-                            {
-                                label: "IC 95% inferior",
-                                data: history.pm2_5_ci95_lower,
-                                yAxisID: "y",
-                                borderColor: "rgba(214, 39, 40, 0)",
-                                backgroundColor: "rgba(214, 39, 40, 0)",
-                                pointRadius: 0,
-                                borderWidth: 0,
-                                spanGaps: false
-                            },
-                            ...[
-                                { value: 9, color: "#00e400", label: "Limite: Bom" },
-                                { value: 35.5, color: "#ffff00", label: "Limite: Moderado" },
-                                { value: 55.5, color: "#ff7e00", label: "Limite: Grupos sensíveis" },
-                                { value: 125.5, color: "#ff0000", label: "Limite: Insalubre" },
-                                { value: 225.5, color: "#8f3f97", label: "Limite: Muito insalubre" },
-                                { value: 325.5, color: "#7e0023", label: "Limite: Perigoso" }
-                            ].map(limit => ({
-                                label: limit.label,
-                                data: history.timestamps.map(() => limit.value),
-                                yAxisID: "y",
-                                borderColor: limit.color,
-                                backgroundColor: limit.color,
-                                borderDash: [6, 5],
-                                borderWidth: 0.5,
-                                pointRadius: 0,
-                                pointHoverRadius: 0,
-                                fill: false,
-                                spanGaps: false,
-                                order: 1
-                            }))
-                        ]
+                            borderWidth: 0,
+                            categoryPercentage: 0.9,
+                            barPercentage: 0.95
+                        }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: true,
-                        interaction: {
-                            mode: "index",
-                            intersect: false
-                        },
                         plugins: {
-                            legend: {
-                                display: false
-                            },
+                            legend: { display: false },
                             title: {
                                 display: true,
-                                text: "PM2.5 (µg/m³)"
+                                text: "PM2.5 médio por hora (µg/m³)"
                             },
                             tooltip: {
-                                enabled: true,
-                                filter: context => context.datasetIndex < 3,
                                 callbacks: {
-                                    title: function(items) {
-                                        if (!items || items.length === 0) return "";
-
-                                        const index = items[0].dataIndex;
-                                        const timestamp = history.timestamps[index];
-
-                                        if (timestamp == null || !Number.isFinite(Number(timestamp))) {
-                                            return "Sem dados";
-                                        }
-
-                                        return new Date(Number(timestamp) * 1000).toLocaleTimeString(
-                                            "pt-BR",
-                                            {
-                                                timeZone: "America/Manaus",
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                                hour12: false
-                                            }
-                                        );
-                                    }
-                                }
+                                    title: items => items.length
+                                        ? tooltipLabels[items[0].dataIndex]
+                                        : "",
+                                    label: context => context.raw == null
+                                        ? "Sem dados"
+                                        : `PM2.5 médio: ${Number(context.raw).toFixed(1)} µg/m³`
+                                },
+                                filter: context => context.raw != null
                             }
                         },
                         scales: {
                             x: {
-                                grid: {
-                                    display: false
-                                },
+                                grid: { display: false },
                                 ticks: {
-                                    autoSkip: false,
+                                    autoSkip: true,
                                     maxRotation: 0,
                                     minRotation: 0,
-                                    padding: 6,
-                                    callback: (value, index) => labels[index] || "",
-                                    font: {
-                                        size: 10
-                                    }
+                                    maxTicksLimit: 20,
+                                    font: { size: 10 }
                                 },
-                                title: {
-                                    display: true,
-                                    text: "Data (Manaus)"
-                                }
+                                title: { display: true, text: "Data e hora (Manaus)" }
                             },
                             y: {
                                 type: "linear",
-                                position: "left",
                                 beginAtZero: true,
                                 suggestedMax: 320,
-                                // title: {
-                                //     display: true,
-                                //     text: 
-                                // }
-                            },
+                                title: { display: true, text: "PM2.5 (µg/m³)" }
+                            }
                         }
                     }
                 });
@@ -672,7 +653,6 @@
                 errorElement.textContent = "Não foi possível carregar o gráfico histórico.";
             }
         }
-
 
         async function loadData() {
 
