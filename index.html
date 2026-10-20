@@ -446,14 +446,16 @@
 
         // const map = L.map("map").setView([-3.10, -60.02], 12);
         const manausBounds = L.latLngBounds(
-            [-3.25, -60.15], // sudoeste
-            [-2.90, -59.80]  // nordeste
+            [-3.25, -60.15],
+            [-2.90, -59.80]
         );
+
+        const isMobile = window.matchMedia("(max-width: 600px)").matches;
 
         const map = L.map("map", {
             center: [-3.10, -60.02],
-            zoom: 12,
-            minZoom: 12,
+            zoom: isMobile ? 11 : 12,
+            minZoom: isMobile ? 11 : 12,
             maxZoom: 16,
             maxBounds: manausBounds,
             maxBoundsViscosity: 1.0,
@@ -916,9 +918,9 @@
                     );
                 });
 
-                // if (sensorPoints.length > 0) {
-                //     map.fitBounds(sensorPoints, { padding: [30, 30] });
-                // }
+                if (sensorPoints.length > 0) {
+                    map.fitBounds(sensorPoints, { padding: [30, 30] });
+                }
 
 
                 /*
