@@ -444,7 +444,15 @@
 
     <script>
 
-        const map = L.map("map").setView([-3.10, -60.02], 12);
+        // const map = L.map("map").setView([-3.10, -60.02], 12);
+        const map = L.map("map", {
+            maxBounds: [
+                [-3.35, -60.30], // sudoeste
+                [-2.85, -59.70]  // nordeste
+            ],
+            maxBoundsViscosity: 1.0,
+            minZoom: 10
+        }).setView([-3.10, -60.02], 12);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
