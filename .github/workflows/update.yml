@@ -1,78 +1,43 @@
-name: Update PM2.5
+name: Update PM2.5 Dashboard
 
 on:
-
-  schedule:
-
-    # Executa a cada 30 minutos.
-    - cron: "*/30 * * * *"
-      timezone: "America/Manaus"
-
-  # Executa também quando houver push na branch main.
   push:
     branches:
       - main
+    paths:
+      - index.html
 
-  # Permite executar manualmente pelo GitHub
   workflow_dispatch:
 
-
 permissions:
-
   contents: read
   pages: write
   id-token: write
 
-
 jobs:
-
-  update:
-
+  deploy:
     runs-on: ubuntu-latest
 
     environment:
-
       name: github-pages
-
       url: ${{ steps.deployment.outputs.page_url }}
 
-
     steps:
-
       - name: Checkout
         uses: actions/checkout@v6
-
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-
-        with:
-          python-version: "3.12"
-
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-
-      - name: Collect PurpleAir data
-        env:
-          PURPLEAIR_API_KEY: ${{ secrets.PURPLEAIR_API_KEY }}
-
-        run: |
-          python collect.py
-
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
+      - name: Prepare site
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v4
-
         with:
-          path: "."
-
+          path: _site
 
       - name: Deploy
         id: deployment
