@@ -853,6 +853,7 @@
                 const sensorPoints = [];
 
                 data.sensors.forEach(sensor => {
+                    if (!sensor.online) return;
                     if (sensor.lat === null || sensor.lon === null) return;
 
                     const lat = Number(sensor.lat);
