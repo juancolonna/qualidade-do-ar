@@ -181,6 +181,12 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
+        @media (max-width: 600px) {
+            #map {
+                height: 450px;
+            }
+        }
+
         .map-popup {
             line-height: 1.5;
         }
@@ -444,29 +450,7 @@
 
     <script>
 
-        // const map = L.map("map").setView([-3.10, -60.02], 12);
-        const manausBounds = L.latLngBounds(
-            [-3.25, -60.15],
-            [-2.90, -59.80]
-        );
-
-        const isMobile = window.matchMedia("(max-width: 600px)").matches;
-
-        const map = L.map("map", {
-            center: [-3.10, -60.02],
-            zoom: isMobile ? 11 : 12,
-            minZoom: isMobile ? 11 : 12,
-            maxZoom: 16,
-            maxBounds: manausBounds,
-            maxBoundsViscosity: 1.0,
-            zoomControl: false,
-            dragging: false,
-            scrollWheelZoom: false,
-            doubleClickZoom: false,
-            touchZoom: false,
-            boxZoom: false,
-            keyboard: false
-        });
+        const map = L.map("map").setView([-3.10, -60.02], 12);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
