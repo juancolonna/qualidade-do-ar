@@ -156,12 +156,18 @@
 
         #history-chart-container {
             background: white;
-            padding: 20px;
+            padding: 8px;
             margin-bottom: 30px;
             border-radius: 8px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
+        @media (max-width: 600px) {
+            #history-chart-container {
+                padding: 4px;
+            }
+        }
+        
         #history-chart {
             width: 100%;
             max-height: 420px;
