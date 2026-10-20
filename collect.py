@@ -192,16 +192,32 @@ def pm_statistics(pm_values):
 
 now = int(time.time())
 
-# # Início da hora atual
-current_hour = now - (now % 3600)
-
-# # Última hora completa
-start_timestamp = current_hour - 3600
-end_timestamp = current_hour
-
 # Recuperação manual:
-# start_timestamp = 1792000800
-# end_timestamp = 1792004400
+manual_recovery = False
+if manual_recovery:
+    data, hora_inicio, hora_fim = "2026-10-19", "19:00", "20:00"
+
+    fuso = ZoneInfo("America/Manaus")
+
+    start_timestamp = int(
+        datetime.strptime(
+            f"{data} {hora_inicio}", "%Y-%m-%d %H:%M"
+        ).replace(tzinfo=fuso).timestamp()
+    )
+
+    end_timestamp = int(
+        datetime.strptime(
+            f"{data} {hora_fim}", "%Y-%m-%d %H:%M"
+        ).replace(tzinfo=fuso).timestamp()
+    )
+else:
+    # Início da hora atual
+    current_hour = now - (now % 3600)
+
+    # Última hora completa
+    start_timestamp = current_hour - 3600
+    end_timestamp = current_hour
+
 
 # ============================================================
 # Collect data
