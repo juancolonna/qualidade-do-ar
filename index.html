@@ -5,9 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="manifest" href="/qualidade-do-ar/manifest.json">
-    <meta name="theme-color" content="#1976d2">
-
     <title>Qualidade do Ar - Manaus</title>
 
     <link
@@ -17,12 +14,6 @@
     >
 
     <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-        }
-
         body {
             font-family: Arial, sans-serif;
             margin: 40px;
@@ -129,11 +120,10 @@
             gap: 8px 12px;
         }
 
+        /* As legendas permanecem no HTML como fonte dos pop-ups dos cards,
+           mas não são exibidas abaixo do gráfico. */
         .legends {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin: -10px 0 30px;
+            display: none;
         }
 
         .legend-panel {
@@ -143,7 +133,6 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             flex: 1 1 300px;
             min-width: 0;
-            overflow-wrap: anywhere;
         }
 
         .legend-title {
@@ -341,6 +330,105 @@
                 margin: 5px;
             }
         }
+
+        .card {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .legend-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        .legend-modal-backdrop.is-open {
+            display: flex;
+        }
+
+        .legend-modal {
+            width: min(100%, 460px);
+            max-height: min(85vh, 620px);
+            overflow-y: auto;
+            background: #fff;
+            color: #222;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .legend-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .legend-modal-header h3 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .legend-modal-close {
+            flex: 0 0 auto;
+            border: 0;
+            border-radius: 6px;
+            background: #eee;
+            color: #222;
+            font-size: 22px;
+            line-height: 1;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+        .legend-modal .legend-panel {
+            box-shadow: none;
+            padding: 0;
+            min-width: 0;
+        }
+
+        /* O título do pop-up fica em destaque; o título interno da legenda é subtítulo. */
+        .legend-modal .legend-title {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 0;
+        }
+
+        .legend-modal .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .legend-modal .legend-item {
+            align-items: flex-start;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 600px) {
+            .legend-modal-backdrop {
+                padding: 12px;
+            }
+
+            .legend-modal {
+                padding: 16px;
+                max-height: 85vh;
+            }
+        }
+
     </style>
 </head>
 
@@ -349,7 +437,7 @@
     <h1>Qualidade do Ar - Manaus</h1>
 
     <div class="subtitle">
-        Monitoramento de PM2.5 realizado pela UFAM
+        Monitoramento de PM2.5
     </div>
 
     <div class="info">
@@ -368,7 +456,7 @@
 
 
     <div class="cards">
-        <div class="card" id="aqi-card">
+        <div class="card" id="aqi-card" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="legend-modal-backdrop">
             <h3>US AQI - PM2.5</h3>
             <div class="value">
                 <span id="us-aqi">--</span>
@@ -376,19 +464,21 @@
             <div id="aqi-category" class="unit">--</div>
         </div>
 
-        <div class="card" id="mean-card">
+        <div class="card" id="mean-card" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="legend-modal-backdrop">
             <h3>PM2.5 médio (IC 95%)</h3>
             <div class="value">
                 <span id="ci95">--</span> <span class="unit">µg/m³</span>
             </div>
+            <div id="pm25-category" class="unit">--</div>
         </div>
 
-        <div class="card" id="pm10-card">
+        <div class="card" id="pm10-card" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="legend-modal-backdrop">
             <h3>PM10.0 médio (IC 95%)</h3>
 
             <div class="value">
                 <span id="pm10-ci95">--</span> <span class="unit">µg/m³</span>
             </div>
+            <div id="pm10-category" class="unit">--</div>
         </div>
     </div>
 
@@ -402,12 +492,12 @@
         <div class="legend-panel">
             <strong class="legend-title">Faixas de PM2.5</strong>
             <div class="legend">
-                <span class="legend-item"><span class="legend-color pm25-green"></span>0–9 bom</span>
-                <span class="legend-item"><span class="legend-color pm25-yellow"></span>9–35,5 moderado</span>
-                <span class="legend-item"><span class="legend-color pm25-orange"></span>35,5–55,5 insalubre para grupos sensíveis</span>
-                <span class="legend-item"><span class="legend-color pm25-red"></span>55,5–125,5 insalubre</span>
-                <span class="legend-item"><span class="legend-color pm25-violet"></span>125,5–225,5 muito insalubre</span>
-                <span class="legend-item"><span class="legend-color pm25-maroon"></span>225,5–325,5 perigoso</span>
+                <span class="legend-item"><span class="legend-color pm25-green"></span>0–15 µg/m³ · Boa</span>
+                <span class="legend-item"><span class="legend-color pm25-yellow"></span>Acima de 15 até 50 µg/m³ · Moderada</span>
+                <span class="legend-item"><span class="legend-color pm25-orange"></span>Acima de 50 até 75 µg/m³ · Ruim</span>
+                <span class="legend-item"><span class="legend-color pm25-red"></span>Acima de 75 até 125 µg/m³ · Muito Ruim</span>
+                <span class="legend-item"><span class="legend-color pm25-maroon"></span>Acima de 125 µg/m³ · Péssima</span>
+                <div class="legend">Classificação conforme a Resolução CONAMA nº 506/2024.</div>
             </div>
         </div>
         <div class="legend-panel">
@@ -463,6 +553,17 @@
     </table>
 
 
+
+    <div id="legend-modal-backdrop" class="legend-modal-backdrop" role="presentation">
+        <section class="legend-modal" role="dialog" aria-modal="true" aria-labelledby="legend-modal-title">
+            <div class="legend-modal-header">
+                <h3 id="legend-modal-title">Legenda dos intervalos</h3>
+                <button type="button" class="legend-modal-close" id="legend-modal-close" aria-label="Fechar legenda">&times;</button>
+            </div>
+            <div id="legend-modal-content"></div>
+        </section>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -489,12 +590,12 @@
                 <div class="map-legend">
                     <div class="map-legend-items">
                         <span class="map-legend-title">PM2.5 (µg/m³)</span>
-                        <span class="map-legend-row"><span class="map-legend-color" style="background:#00e400"></span>0–9,0 · Bom</span>
-                        <span class="map-legend-row"><span class="map-legend-color" style="background:#ffff00"></span>9,1–35,4 · Moderado</span>
-                        <span class="map-legend-row"><span class="map-legend-color" style="background:#ff7e00"></span>35,5–55,4 · Grupos sensíveis</span>
-                        <span class="map-legend-row"><span class="map-legend-color" style="background:#ff0000"></span>55,5–125,4 · Insalubre</span>
-                        <span class="map-legend-row"><span class="map-legend-color" style="background:#8f3f97"></span>125,5–225,4 · Muito insalubre</span>
-                        <span class="map-legend-row"><span class="map-legend-color" style="background:#7e0023"></span>&gt;225,4 · Perigoso</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#00e400"></span>0–15 · Boa</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#ffff00"></span>&gt;15–50 · Moderada</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#ff7e00"></span>&gt;50–75 · Ruim</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#ff0000"></span>&gt;75–125 · Muito Ruim</span>
+                        <span class="map-legend-row"><span class="map-legend-color" style="background:#7e0023"></span>&gt;125 · Péssima</span>
+                        <span class="map-legend-row">CONAMA 506/2024</span>
                     </div>
                 </div>
             `;
@@ -506,24 +607,24 @@
 
         mapLegend.addTo(map);
 
+        // Faixas de PM2.5 conforme a Resolução CONAMA nº 506/2024.
+        // Os limites são aplicados como cortes numéricos para também classificar médias decimais.
         function getPM25Color(pm25) {
-            if (pm25 === null || isNaN(pm25)) return "#808080";
-            if (pm25 <= 9.0) return "#00e400";
-            if (pm25 <= 35.4) return "#ffff00";
-            if (pm25 <= 55.4) return "#ff7e00";
-            if (pm25 <= 125.4) return "#ff0000";
-            if (pm25 <= 225.4) return "#8f3f97";
+            if (pm25 === null || !Number.isFinite(pm25)) return "#808080";
+            if (pm25 <= 15) return "#00e400";
+            if (pm25 <= 50) return "#ffff00";
+            if (pm25 <= 75) return "#ff7e00";
+            if (pm25 <= 125) return "#ff0000";
             return "#7e0023";
         }
 
         function getPM25Category(pm25) {
-            if (pm25 === null || isNaN(pm25)) return "—";
-            if (pm25 <= 9.0) return "Bom";
-            if (pm25 <= 35.4) return "Moderado";
-            if (pm25 <= 55.4) return "Insalubre para grupos sensíveis";
-            if (pm25 <= 125.4) return "Insalubre";
-            if (pm25 <= 225.4) return "Muito insalubre";
-            return "Perigoso";
+            if (pm25 === null || !Number.isFinite(pm25)) return "—";
+            if (pm25 <= 15) return "Boa";
+            if (pm25 <= 50) return "Moderada";
+            if (pm25 <= 75) return "Ruim";
+            if (pm25 <= 125) return "Muito Ruim";
+            return "Péssima";
         }
 
         async function loadHistoryChart() {
@@ -750,6 +851,22 @@
                     }
                 }
 
+                let pm10Category = "—";
+                if (data.pm10_0_mean != null && Number.isFinite(pm10Mean)) {
+                    if (pm10Mean <= 45) {
+                        pm10Category = "Dentro da diretriz da OMS";
+                    } else if (pm10Mean <= 75) {
+                        pm10Category = "Acima da diretriz da OMS";
+                    } else if (pm10Mean <= 100) {
+                        pm10Category = "Concentração elevada";
+                    } else if (pm10Mean <= 150) {
+                        pm10Category = "Concentração muito elevada";
+                    } else {
+                        pm10Category = "Concentração extremamente elevada";
+                    }
+                }
+                document.getElementById("pm10-category").textContent = pm10Category;
+
                 /*
                  * Média de PM10.0 e intervalo de confiança de 95%
                  */
@@ -783,21 +900,35 @@
                     "pm25-maroon"
                 );
 
-                if (!isNaN(mean)) {
-                    if (mean <= 9.0) {
+                if (data.pm2_5_mean != null && Number.isFinite(mean)) {
+                    if (mean <= 15) {
                         meanCard.classList.add("pm25-green");
-                    } else if (mean <= 35.4) {
+                    } else if (mean <= 50) {
                         meanCard.classList.add("pm25-yellow");
-                    } else if (mean <= 55.4) {
+                    } else if (mean <= 75) {
                         meanCard.classList.add("pm25-orange");
-                    } else if (mean <= 125.4) {
+                    } else if (mean <= 125) {
                         meanCard.classList.add("pm25-red");
-                    } else if (mean <= 225.4) {
-                        meanCard.classList.add("pm25-violet");
                     } else {
                         meanCard.classList.add("pm25-maroon");
                     }
                 }
+
+                let pm25Category = "—";
+                if (data.pm2_5_mean != null && Number.isFinite(mean)) {
+                    if (mean <= 15) {
+                        pm25Category = "Boa";
+                    } else if (mean <= 50) {
+                        pm25Category = "Moderada";
+                    } else if (mean <= 75) {
+                        pm25Category = "Ruim";
+                    } else if (mean <= 125) {
+                        pm25Category = "Muito Ruim";
+                    } else {
+                        pm25Category = "Péssima";
+                    }
+                }
+                document.getElementById("pm25-category").textContent = pm25Category;
 
 
                 document.getElementById("ci95").innerHTML =
@@ -874,7 +1005,7 @@
                         ? pm25.toFixed(1)
                         : "--";
                     const markerColor = getPM25Color(pm25);
-                    const markerTextColor = pm25 !== null && !isNaN(pm25) && pm25 > 125.4
+                    const markerTextColor = pm25 !== null && !isNaN(pm25) && pm25 > 120
                         ? "white"
                         : "black";
 
@@ -963,6 +1094,61 @@
             }
 
         }
+
+
+
+        // Abre a legenda correspondente ao card, tanto por toque quanto por clique.
+        const legendModalBackdrop = document.getElementById("legend-modal-backdrop");
+        const legendModalTitle = document.getElementById("legend-modal-title");
+        const legendModalContent = document.getElementById("legend-modal-content");
+        const legendModalClose = document.getElementById("legend-modal-close");
+        const cardLegendMap = {
+            "mean-card": { title: "Faixas de PM2.5", index: 0 },
+            "aqi-card": { title: "Faixas do US AQI", index: 1 },
+            "pm10-card": { title: "PM10.0 — OMS", index: 2 }
+        };
+
+        function openCardLegend(card) {
+            const config = cardLegendMap[card.id];
+            if (!config) return;
+            const panels = document.querySelectorAll(".legends > .legend-panel");
+            const sourcePanel = panels[config.index];
+            if (!sourcePanel) return;
+
+            legendModalTitle.textContent = config.title;
+            const clonedPanel = sourcePanel.cloneNode(true);
+            clonedPanel.querySelector(".legend-title")?.remove();
+            legendModalContent.replaceChildren(clonedPanel);
+            legendModalBackdrop.classList.add("is-open");
+            document.body.style.overflow = "hidden";
+            legendModalClose.focus();
+        }
+
+        function closeCardLegend() {
+            legendModalBackdrop.classList.remove("is-open");
+            document.body.style.overflow = "";
+        }
+
+        Object.keys(cardLegendMap).forEach(id => {
+            const card = document.getElementById(id);
+            card.addEventListener("click", () => openCardLegend(card));
+            card.addEventListener("keydown", event => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openCardLegend(card);
+                }
+            });
+        });
+
+        legendModalClose.addEventListener("click", closeCardLegend);
+        legendModalBackdrop.addEventListener("click", event => {
+            if (event.target === legendModalBackdrop) closeCardLegend();
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && legendModalBackdrop.classList.contains("is-open")) {
+                closeCardLegend();
+            }
+        });
 
 
         /*
