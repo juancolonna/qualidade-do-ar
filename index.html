@@ -647,6 +647,7 @@
                 const labels = [];
                 const values = [];
                 const tooltipLabels = [];
+                const dayTickIndices = [];
 
                 for (let timestamp = firstHour; timestamp <= lastHour; timestamp += 3600) {
                     const parts = Object.fromEntries(
@@ -659,11 +660,14 @@
                         ? hourData.values.reduce((sum, item) => sum + item, 0) / hourData.values.length
                         : null;
 
-                    // Mostra a data na primeira barra de cada dia e a hora nas demais.
+                    // O eixo X mostra somente um tick por dia; o tooltip mantém data e hora.
                     const isFirstHourOfDay = parts.hour === "00";
                     labels.push(isFirstHourOfDay
-                        ? `${parts.day}/${parts.month} ${parts.hour}h`
-                        : `${parts.hour}h`);
+                        ? `${parts.day}/${parts.month}`
+                        : "");
+                    if (isFirstHourOfDay) {
+                        dayTickIndices.push(labels.length - 1);
+                    }
                     values.push(value);
                     tooltipLabels.push(`${parts.day}/${parts.month}/${parts.year} ${parts.hour}:00`);
                 }
@@ -715,10 +719,12 @@
                             x: {
                                 grid: { display: false },
                                 ticks: {
-                                    autoSkip: true,
+                                    autoSkip: false,
                                     maxRotation: 0,
                                     minRotation: 0,
-                                    maxTicksLimit: 20,
+                                    callback: (value, index) => dayTickIndices.includes(index)
+                                        ? labels[index]
+                                        : "",
                                     font: { size: 10 }
                                 },
                                 title: { display: true, text: "Data e hora (Manaus)" }
