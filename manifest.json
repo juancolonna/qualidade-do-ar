@@ -2,7 +2,7 @@
   "id": "/qualidade-do-ar/",
   "name": "Qualidade do Ar",
   "short_name": "Qualidade do Ar",
-  "description": "Monitoramento da qualidade do ar",
+  "description": "Monitoramento da qualidade do ar realizado pelo IComp-UFAM",
   "start_url": "/qualidade-do-ar/",
   "scope": "/qualidade-do-ar/",
   "display": "standalone",
