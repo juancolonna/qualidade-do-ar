@@ -32,7 +32,7 @@ jobs:
       - name: Prepare site
         run: |
           mkdir -p _site/icons
-          cp index.html manifest.json _site/
+          cp index.html privacy.html manifest.json _site/
           cp icons/icon-192.png icons/icon-512.png _site/icons/
 
       - name: Upload site
