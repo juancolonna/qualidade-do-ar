@@ -836,12 +836,10 @@
                  * Média de PM10.0 e intervalo de confiança de 95%
                  */
                 document.getElementById("pm10-ci95").innerHTML =
-                    data.pm10_0_ci95_lower != null &&
-                    data.pm10_0_mean != null &&
-                    data.pm10_0_ci95_upper != null
-                        ? '<span class="ci-value">' + Number(data.pm10_0_ci95_lower).toFixed(1) +
-                          ' ≤ </span><span class="mean-value">' + Number(data.pm10_0_mean).toFixed(1) +
-                          '</span><span class="ci-value"> ≤ ' + Number(data.pm10_0_ci95_upper).toFixed(1) + '</span>'
+                    data.pm10_0_ci95_upper != null && data.pm10_0_mean != null
+                        ? '<span class="mean-value">' + Number(data.pm10_0_mean).toFixed(1) +
+                          '</span><span class="ci-value"> ± ' +
+                          (Number(data.pm10_0_ci95_upper) - Number(data.pm10_0_mean)).toFixed(1) + '</span>'
                         : (data.pm10_0_mean != null
                             ? Number(data.pm10_0_mean).toFixed(1)
                             : "--");
@@ -893,12 +891,10 @@
                 document.getElementById("pm25-category").textContent = pm25Category;
 
                 document.getElementById("ci95").innerHTML =
-                    data.pm2_5_ci95_lower !== null &&
-                    data.pm2_5_mean !== null &&
-                    data.pm2_5_ci95_upper !== null
-                        ? '<span class="ci-value">' + Number(data.pm2_5_ci95_lower).toFixed(1) +
-                          ' ≤ </span><span class="mean-value">' + Number(data.pm2_5_mean).toFixed(1) +
-                          '</span><span class="ci-value"> ≤ ' + Number(data.pm2_5_ci95_upper).toFixed(1) + '</span>'
+                    data.pm2_5_ci95_upper != null && data.pm2_5_mean != null
+                        ? '<span class="mean-value">' + Number(data.pm2_5_mean).toFixed(1) +
+                          '</span><span class="ci-value"> ± ' +
+                          (Number(data.pm2_5_ci95_upper) - Number(data.pm2_5_mean)).toFixed(1) + '</span>'
                         : "--";
 
                 /*
