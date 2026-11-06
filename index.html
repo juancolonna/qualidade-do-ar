@@ -10,7 +10,9 @@
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(async function(OneSignal) {
             await OneSignal.init({
-               appId: "33d827bb-3066-427d-9362-e28c74125d6b",
+                appId: "33d827bb-3066-427d-9362-e28c74125d6b",
+                serviceWorkerPath: "/qualidade-do-ar/OneSignalSDKWorker.js",
+                serviceWorkerParam: { scope: "/qualidade-do-ar/" }
             });
         });
     </script>
