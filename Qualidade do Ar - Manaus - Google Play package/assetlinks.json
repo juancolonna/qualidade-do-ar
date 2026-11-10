@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.juancolonna.twa",
+        "sha256_cert_fingerprints": ["8B:7A:6C:5B:79:C4:55:FD:24:F2:51:A5:B8:25:E5:A2:4D:F7:82:86:73:1A:80:02:A0:31:09:37:35:F9:34:9B"]
+      }
+    }]

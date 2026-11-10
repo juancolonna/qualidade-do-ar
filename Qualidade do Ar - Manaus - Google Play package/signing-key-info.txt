@@ -1,0 +1,10 @@
+Keep this file and signing.keystore in a safe place. You'll need these files if you want to upload future versions of your PWA to the Google Play Store.
+
+Key store file: signing.keystore
+Key store password: n_koZPM1M2yC
+Key alias: qualidadedoar
+Key password: n_koZPM1M2yC
+Signer's full name: Juan Gabriel Colonna
+Signer's organization: UFAM
+Signer's organizational unit: IComp
+Signer's country code: BR

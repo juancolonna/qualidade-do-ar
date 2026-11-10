@@ -1,0 +1,24 @@
+globalprotect connect -p iprealvpn.ufam.edu.br
+globalprotect disconnect
+globalprotect show --status
+
+SSH dentro da vpn
+ssh juan@10.208.200.26
+exit
+
+Dentro do servido iniciar ou reiniciar o daemon
+sudo systemctl daemon-reload
+sudo systemctl enable --now api-server.service
+sudo systemctl status api-server.service
+sudo journalctl -u api-server.service -f
+
+API para obter os dados 
+no browser http://200.17.49.1:8080/data.json
+com curl -o data.json http://200.17.49.1:8080/data.json
+
+PWA builder: https://www.pwabuilder.com/
+Key alias: qualidadedoar
+Key full name: seu nome completo
+Key organization: Independent Developer
+Key organizational unit: Qualidade do Ar
+Key country code: BR
