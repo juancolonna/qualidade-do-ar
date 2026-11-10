@@ -63,11 +63,39 @@
     "city": "manaus"
   },
   {
+    "id": 165131,
+    "name": "UEA_EducAIR_17",
+    "lat": -3.022957,
+    "lon": -60.05522,
+    "city": "manaus"
+  },
+  {
+    "id": 177605,
+    "name": "UEA_EducAIR_26",
+    "lat": -3.079295,
+    "lon": -59.93338,
+    "city": "manaus"
+  },
+  {
     "id": 177655,
     "name": "UEA_EducAIR_27",
     "lat": -2.836067,
     "lon": -58.213688,
     "city": "silves"
+  },
+  {
+    "id": 181801,
+    "name": "UEA_EducAIR_31",
+    "lat": -3.103645,
+    "lon": -60.04944,
+    "city": "manaus"
+  },
+  {
+    "id": 181825,
+    "name": "UEA_EducAIR_32",
+    "lat": -3.112573,
+    "lon": -60.01188,
+    "city": "manaus"
   },
   {
     "id": 181835,
@@ -89,6 +117,13 @@
     "lat": -3.396464,
     "lon": -57.71772,
     "city": "maues"
+  },
+  {
+    "id": 204169,
+    "name": "SEMA_DCAM_TESTBEDB",
+    "lat": -3.131188,
+    "lon": -60.00362,
+    "city": "manaus"
   },
   {
     "id": 204169,
@@ -140,6 +175,20 @@
     "city": "manaus"
   },
   {
+    "id": 205961,
+    "name": "SEMA_DCAM_TEST.768",
+    "lat": -3.131462,
+    "lon": -60.003593,
+    "city": "manaus"
+  },
+  {
+    "id": 205967,
+    "name": "SEMA_TEST9D2",
+    "lat": -3.131213,
+    "lon": -60.003742,
+    "city": "manaus"
+  },
+  {
     "id": 206671,
     "name": "SEMA_DCAM_26",
     "lat": -3.197376,
@@ -159,6 +208,13 @@
     "lat": -2.613609,
     "lon": -56.66655,
     "city": "parintins"
+  },
+  {
+    "id": 31509,
+    "name": "UEA-EST",
+    "lat": -3.091649,
+    "lon": -60.01759,
+    "city": "manaus"
   },
   {
     "id": 315615,

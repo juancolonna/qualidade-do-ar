@@ -425,10 +425,98 @@
             }
         }
 
+
+        /* Botão discreto para reativar notificações. */
+        #notification-button {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 1500;
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 50%;
+            background: #ffffff;
+            color: #555;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #notification-button:hover {
+            background: #f0f0f0;
+        }
+
+        #notification-button:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        #notification-button svg {
+            width: 21px;
+            height: 21px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @media (max-width: 600px) {
+            #notification-button {
+                right: 12px;
+                bottom: 12px;
+                width: 42px;
+                height: 42px;
+            }
+        }
+
+
+        /* Mantém os cards de PM2.5 e PM10 lado a lado em telas pequenas. */
+        @media (max-width: 600px) {
+            .cards {
+                gap: 8px;
+                flex-wrap: nowrap;
+            }
+
+            .cards .card {
+                flex: 1 1 0;
+                min-width: 0;
+                padding: 12px 6px;
+            }
+
+            .cards .card h3 {
+                font-size: 12px;
+            }
+
+            .cards .card .value {
+                font-size: 18px;
+            }
+
+            .cards .card .unit {
+                font-size: 11px;
+            }
+        }
+
     </style>
 </head>
 
 <body>
+
+    <button
+        type="button"
+        id="notification-button"
+        aria-label="Ativar notificações"
+        title="Ativar notificações"
+    >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+            <path d="M10 21h4"></path>
+        </svg>
+    </button>
 
     <h1>Qualidade do Ar - Manaus</h1>
 
@@ -1076,6 +1164,34 @@
 
         loadData();
         loadHistoryChart();
+
+        // Solicita permissão e reinscreve o usuário nas notificações via OneSignal.
+        document.getElementById("notification-button").addEventListener("click", function () {
+            const button = this;
+            button.disabled = true;
+
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            window.OneSignalDeferred.push(async function (OneSignal) {
+                try {
+                    if (OneSignal.Notifications.permissionNative === "denied") {
+                        alert("As notificações estão bloqueadas nas configurações do navegador. Altere a permissão deste site para permitir notificações e tente novamente.");
+                        return;
+                    }
+
+                    const permissionGranted = await OneSignal.Notifications.requestPermission();
+
+                    if (permissionGranted) {
+                        await OneSignal.User.PushSubscription.optIn();
+                        alert("Notificações ativadas com sucesso!");
+                    }
+                } catch (error) {
+                    console.error("Erro ao ativar notificações:", error);
+                    alert("Não foi possível ativar as notificações. Tente novamente.");
+                } finally {
+                    button.disabled = false;
+                }
+            });
+        });
 
     </script>
 
