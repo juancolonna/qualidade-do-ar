@@ -302,8 +302,12 @@ body {
                 font-size: 24px;
             }
 
-            .subtitle-text {
+            .subtitle {
                 font-size: clamp(11px, 3.5vw, 14px);
+            }
+
+            .subtitle-text {
+                font-size: inherit;
                 white-space: nowrap;
             }
         }
