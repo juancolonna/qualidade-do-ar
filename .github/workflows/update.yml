@@ -36,7 +36,7 @@ jobs:
       - name: Prepare site
         run: |
           mkdir -p _site/icons
-          cp index.html privacy.html manifest.json OneSignalSDKWorker.js _site/
+          cp index.html privacy.html style.css manifest.json OneSignalSDKWorker.js _site/
           cp icons/icon-192.png icons/icon-512.png icons/icon-256.png _site/icons/
 
       - name: Upload site
