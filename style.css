@@ -301,6 +301,10 @@ body {
             h1 {
                 font-size: 24px;
             }
+
+            p.subtitulo {
+               font-size: 14px;
+            }
         }
 
         .card {

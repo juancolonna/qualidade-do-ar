@@ -9,6 +9,7 @@ on:
       - privacy.html
       - manifest.json
       - OneSignalSDKWorker.js
+      - style.css
       - .github/workflows/update.yml
 
   workflow_dispatch:
